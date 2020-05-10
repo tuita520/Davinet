@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Diagnostics;
 
-namespace DaviNet
+namespace Davinet
 {
     public class UnityProjectJunctionTool : MonoBehaviour
     {
