@@ -23,4 +23,12 @@ public class Menu : MonoBehaviour
 
         Destroy(gameObject);
     }
+
+    public void StartHost()
+    {
+        Davinet.Network.Instance.StartServer(Convert.ToInt32(port.text));
+        Davinet.Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text));
+
+        Destroy(gameObject);
+    }
 }

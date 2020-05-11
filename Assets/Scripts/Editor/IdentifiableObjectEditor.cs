@@ -14,13 +14,16 @@ public class IdentifiableObjectEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        GUILayout.Label($"GUID: {guidProperty.intValue}");
-        
-        if (GUILayout.Button("Generate GUID"))
+        GUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("Generate new GUID"))
         {
             var random = new System.Random();
             guidProperty.intValue = random.Next();
         }
+
+        GUILayout.Label($"GUID: {guidProperty.intValue}"); 
+        GUILayout.EndHorizontal();
 
         serializedObject.ApplyModifiedProperties();
     }

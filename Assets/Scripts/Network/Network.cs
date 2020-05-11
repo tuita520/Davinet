@@ -1,11 +1,14 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
-        public event System.Action OnStartNetwork;
+        [SerializeField]
+        IdentifiableObject[] registeredPrefabs;
 
         public bool IsServer => server != null;
         public bool IsClient => client != null;
@@ -39,54 +42,63 @@ namespace Davinet
         private void Awake()
         {
             enabled = false;
-        }        
+
+            registeredPrefabsMap = new Dictionary<int, IdentifiableObject>();
+
+            foreach (IdentifiableObject registeredPrefab in registeredPrefabs)
+            {
+                registeredPrefabsMap[registeredPrefab.GUID] = registeredPrefab;
+            }
+        }
+
+        private Dictionary<int, IdentifiableObject> registeredPrefabsMap;
 
         // Transport layer network manager.
-        private NetManager netManager;
-        private NetDataWriter writer;
+        private NetManager serverManager;
+        private NetDataWriter serverWriter;
+
+        private NetManager clientManager;
+        private NetDataWriter clientWriter;
 
         public void StartServer(int port)
         {
-            server = new Remote(true);
-            netManager = new NetManager(server.NetEventListener);
-            netManager.Start(port);
-            writer = new NetDataWriter();
-            OnStartNetwork?.Invoke();
+            server = new Remote(registeredPrefabsMap, true);
+            serverManager = new NetManager(server.NetEventListener);
+            serverManager.Start(port);
+            serverWriter = new NetDataWriter();
 
             enabled = true;
         }
 
         public void ConnectClient(string address, int port)
         {
-            client = new Remote(false);
-            netManager = new NetManager(client.NetEventListener);
-            netManager.Start();
-            netManager.Connect(address, port, "DaviNet");
-            writer = new NetDataWriter();
+            client = new Remote(registeredPrefabsMap, false);
+            clientManager = new NetManager(client.NetEventListener);
+            clientManager.Start();
+            clientManager.Connect(address, port, "DaviNet");
+            clientWriter = new NetDataWriter();
 
             enabled = true;
-            OnStartNetwork?.Invoke();
         }
 
         private void FixedUpdate()
         {
-            netManager.PollEvents();
+            if (IsServer)
+                serverManager.PollEvents();
+
+            if (IsClient)
+                clientManager.PollEvents();
+
+            if (IsServer)
+            {
+                server.Write(serverWriter);
+                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
+                serverWriter.Reset();
+            }
 
             if (IsClient)
             {
                 // client.Write(statefulObjects);
-            }
-
-            if (IsServer)
-            {
-                server.Write(writer);
-
-                foreach (NetPeer peer in netManager.ConnectedPeerList)
-                {
-                    peer.Send(writer, DeliveryMethod.ReliableOrdered);
-                }
-
-                writer.Reset();
             }
         }
     }
