@@ -2,7 +2,7 @@
 using LiteNetLib.Utils;
 using UnityEngine;
 
-public class StatefulRigidbody : MonoBehaviour, IStateful
+public class StatefulRigidbody : MonoBehaviour, IStreamable
 {
     private Rigidbody rb;
 
@@ -25,6 +25,14 @@ public class StatefulRigidbody : MonoBehaviour, IStateful
         writer.Put(rb.rotation);
         writer.Put(rb.velocity);
         writer.Put(rb.angularVelocity);
+    }
+
+    public void Clear(NetDataReader reader)
+    {
+        reader.GetVector3();
+        reader.GetQuaternion();
+        reader.GetVector3();
+        reader.GetVector3();
     }
 
     public bool ShouldWrite()

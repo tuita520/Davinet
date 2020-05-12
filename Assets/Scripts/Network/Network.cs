@@ -62,7 +62,7 @@ namespace Davinet
 
         public void StartServer(int port)
         {
-            server = new Remote(registeredPrefabsMap, true);
+            server = new Remote(registeredPrefabsMap, true, false);
             serverManager = new NetManager(server.NetEventListener);
             serverManager.Start(port);
             serverWriter = new NetDataWriter();
@@ -72,7 +72,7 @@ namespace Davinet
 
         public void ConnectClient(string address, int port)
         {
-            client = new Remote(registeredPrefabsMap, false);
+            client = new Remote(registeredPrefabsMap, false, IsServer);
             clientManager = new NetManager(client.NetEventListener);
             clientManager.Start();
             clientManager.Connect(address, port, "DaviNet");
@@ -91,14 +91,26 @@ namespace Davinet
 
             if (IsServer)
             {
-                server.Write(serverWriter);
+                server.WriteSpawns(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
+
+                server.WriteState(serverWriter);
+                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
+                serverWriter.Reset();
+
+                if (server.SetOwnershipWriter.Length > 0)
+                {
+                    serverManager.SendToAll(server.SetOwnershipWriter, DeliveryMethod.ReliableOrdered);
+                    server.SetOwnershipWriter.Reset();
+                }
             }
 
             if (IsClient)
             {
-                // client.Write(statefulObjects);
+                client.WriteState(clientWriter);
+                clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
+                clientWriter.Reset();
             }
         }
     }

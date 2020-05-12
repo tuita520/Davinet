@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class IdentifiableObject : MonoBehaviour
+public class IdentifiableObject : MonoBehaviour, IIdentifiable
 {
     [SerializeField]
     int guid;

@@ -1,29 +1,13 @@
-﻿using UnityEngine;
-using Davinet;
+﻿using Davinet;
+using LiteNetLib.Utils;
+using UnityEngine;
 
-public class PlayerInputController : MonoBehaviour
+public class PlayerInputController : MonoBehaviour, IInputController
 {
     [SerializeField]
     float maxSpeed = 5;
 
     private Vector3 moveInput;
-
-    public Vector3 GetInput()
-    {
-        return moveInput;
-    }
-
-    public void InjectInput(Vector3 input)
-    {
-        moveInput = input;
-
-        GetComponent<RigidbodyDrag>().MoveInput = moveInput;
-    }
-
-    public void SetInputMode(bool injectOnly)
-    {
-        enabled = injectOnly;
-    }
 
     private void Update()
     {
@@ -47,5 +31,30 @@ public class PlayerInputController : MonoBehaviour
         }
 
         GetComponent<RigidbodyDrag>().MoveInput = moveInput;
+    }
+
+    public void Read(NetDataReader reader)
+    {
+        moveInput = reader.GetVector3();
+    }
+
+    public void Write(NetDataWriter writer)
+    {
+        writer.Put(moveInput);
+    }
+
+    public bool ShouldWrite()
+    {
+        return true;
+    }
+
+    public void Clear(NetDataReader reader)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void SetEnabled(bool value)
+    {
+        enabled = value;
     }
 }

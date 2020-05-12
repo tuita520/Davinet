@@ -18,8 +18,8 @@ GameObject:
   - component: {fileID: 9161741366647314634}
   - component: {fileID: 9161741366647314637}
   - component: {fileID: 9161741366647314636}
-  - component: {fileID: 9161741366647314639}
   - component: {fileID: -2298100474024439213}
+  - component: {fileID: -6562973476417313315}
   m_Layer: 0
   m_Name: DraggableBox
   m_TagString: Untagged
@@ -183,20 +183,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31373d8cd952db346a929b98c4124d95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &9161741366647314639
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9161741366647314629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecd24546a01653e42be560cc237acd46, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serverOnlyComponents:
-  - {fileID: 9161741366647314638}
 --- !u!114 &-2298100474024439213
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -210,3 +196,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   guid: 1717083505
+--- !u!114 &-6562973476417313315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9161741366647314629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0036f60ac345a740937ee47efc9823b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
