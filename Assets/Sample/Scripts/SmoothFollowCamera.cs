@@ -2,8 +2,7 @@
 
 public class SmoothFollowCamera : MonoBehaviour
 {
-    [SerializeField]
-    Transform target;
+    public Transform target;
 
     [SerializeField]
     float smoothTime = 1;

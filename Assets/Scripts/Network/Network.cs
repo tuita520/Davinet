@@ -52,6 +52,7 @@ namespace Davinet
         }
 
         private Dictionary<int, IdentifiableObject> registeredPrefabsMap;
+        private RemoteObjects remoteObjects;
 
         // Transport layer network manager.
         private NetManager serverManager;
@@ -62,7 +63,9 @@ namespace Davinet
 
         public void StartServer(int port)
         {
-            server = new Remote(registeredPrefabsMap, true, false);
+            remoteObjects = new RemoteObjects(registeredPrefabsMap);
+
+            server = new Remote(remoteObjects, true, false);
             serverManager = new NetManager(server.NetEventListener);
             serverManager.Start(port);
             serverWriter = new NetDataWriter();
@@ -72,7 +75,10 @@ namespace Davinet
 
         public void ConnectClient(string address, int port)
         {
-            client = new Remote(registeredPrefabsMap, false, IsServer);
+            if (remoteObjects == null)
+                remoteObjects = new RemoteObjects(registeredPrefabsMap);
+
+            client = new Remote(remoteObjects, false, IsServer);
             clientManager = new NetManager(client.NetEventListener);
             clientManager.Start();
             clientManager.Connect(address, port, "DaviNet");
@@ -83,12 +89,6 @@ namespace Davinet
 
         private void FixedUpdate()
         {
-            if (IsServer)
-                serverManager.PollEvents();
-
-            if (IsClient)
-                clientManager.PollEvents();
-
             if (IsServer)
             {
                 server.WriteSpawns(serverWriter);
@@ -106,12 +106,18 @@ namespace Davinet
                 }
             }
 
-            if (IsClient)
+            if (IsClient && !IsServer)
             {
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
                 clientWriter.Reset();
             }
+
+            if (IsServer)
+                serverManager.PollEvents();
+
+            if (IsClient)
+                clientManager.PollEvents();
         }
     }
 }

@@ -1,9 +1,9 @@
 ﻿namespace Davinet
 {
     enum PacketType : byte
-    {
-        SetOwnership,
+    {       
         Spawn,
+        SetOwnership,
         State,
         Join
     }
