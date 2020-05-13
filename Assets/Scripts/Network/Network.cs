@@ -61,25 +61,57 @@ namespace Davinet
         private NetManager clientManager;
         private NetDataWriter clientWriter;
 
-        public void StartServer(int port)
+        public class NetworkDebug
+        {
+            public bool simulateLatency;
+            public int maxLatency;
+            public int minLatency;
+
+            public bool simulatePacketLoss;
+            public int packetLossChance;
+        }
+
+        public void StartServer(int port, NetworkDebug debug=null)
         {
             remoteObjects = new RemoteObjects(registeredPrefabsMap);
 
             server = new Remote(remoteObjects, true, false);
             serverManager = new NetManager(server.NetEventListener);
+
+            if (debug != null)
+            {
+                serverManager.SimulateLatency = debug.simulateLatency;
+                serverManager.SimulationMaxLatency = debug.maxLatency;
+                serverManager.SimulationMinLatency = debug.minLatency;
+
+                serverManager.SimulatePacketLoss = debug.simulatePacketLoss;
+                serverManager.SimulationPacketLossChance = debug.packetLossChance;
+            }
+
             serverManager.Start(port);
             serverWriter = new NetDataWriter();
 
             enabled = true;
         }
 
-        public void ConnectClient(string address, int port)
+        public void ConnectClient(string address, int port, NetworkDebug debug = null)
         {
             if (remoteObjects == null)
                 remoteObjects = new RemoteObjects(registeredPrefabsMap);
 
             client = new Remote(remoteObjects, false, IsServer);
             clientManager = new NetManager(client.NetEventListener);
+
+            if (debug != null)
+            {
+                clientManager.SimulateLatency = debug.simulateLatency;
+                clientManager.SimulationMaxLatency = debug.maxLatency;
+                clientManager.SimulationMinLatency = debug.minLatency;
+
+                clientManager.SimulatePacketLoss = debug.simulatePacketLoss;
+                clientManager.SimulationPacketLossChance = debug.packetLossChance;
+            }
+
             clientManager.Start();
             clientManager.Connect(address, port, "DaviNet");
             clientWriter = new NetDataWriter();

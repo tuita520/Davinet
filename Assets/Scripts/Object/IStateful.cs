@@ -2,7 +2,7 @@
 
 namespace Davinet
 {
-    public interface IStreamable
+    public interface IStateful
     {
         void Read(NetDataReader reader);
         void Write(NetDataWriter writer);

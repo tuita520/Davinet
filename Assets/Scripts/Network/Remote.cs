@@ -22,6 +22,7 @@ namespace Davinet
         private int remoteID;
         private Dictionary<int, NetPeer> peersByIndex;
         private RemoteObjects remoteObjects;
+        private bool writeAll;
 
         public Remote(RemoteObjects remoteObjects, bool arbiter, bool listenRemote)
         {            
@@ -66,6 +67,8 @@ namespace Davinet
 
                 Spawn(player);
                 SetOwnership(player.GetComponent<OwnableObject>(), id);
+
+                writeAll = true;
             }
         }
 
@@ -129,7 +132,7 @@ namespace Davinet
             // Object state serialization.
             foreach (var kvp in remoteObjects.statefulObjects)
             {
-                if ((arbiter || kvp.Value.Owner == remoteID) && kvp.Value.GetComponent<IStreamable>().ShouldWrite())
+                if ((arbiter || kvp.Value.Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAll))
                 {
                     objectsToWrite.Add(kvp.Key, kvp.Value);
                 }
@@ -140,10 +143,11 @@ namespace Davinet
             foreach (var kvp in objectsToWrite)
             {
                 writer.Put(kvp.Key);
-                kvp.Value.GetComponent<IStreamable>().Write(writer);
+                kvp.Value.GetComponent<IStateful>().Write(writer);
             }
             
             objectsToWrite.Clear();
+            writeAll = false;
         }
 
         public void WriteSpawns(NetDataWriter writer)
@@ -234,9 +238,9 @@ namespace Davinet
                 if (remoteObjects.statefulObjects.ContainsKey(id))
                 {
                     if (remoteObjects.statefulObjects[id].Owner != remoteID)
-                        remoteObjects.statefulObjects[id].GetComponent<IStreamable>().Read(reader);
+                        remoteObjects.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                     else
-                        remoteObjects.statefulObjects[id].GetComponent<IStreamable>().Clear(reader);
+                        remoteObjects.statefulObjects[id].GetComponent<IStateful>().Clear(reader);
                 }
             }
         }

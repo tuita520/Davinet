@@ -1,5 +1,4 @@
-﻿using Davinet;
-using LiteNetLib.Utils;
+﻿using LiteNetLib.Utils;
 using UnityEngine;
 
 public class PlayerInputController : MonoBehaviour, IInputController
@@ -7,6 +6,7 @@ public class PlayerInputController : MonoBehaviour, IInputController
     [SerializeField]
     float maxSpeed = 5;
 
+    public bool TransformPressed { get; private set; }
     private Vector3 moveInput;
 
     private void Update()
@@ -31,26 +31,11 @@ public class PlayerInputController : MonoBehaviour, IInputController
         }
 
         GetComponent<RigidbodyDrag>().MoveInput = moveInput;
-    }
 
-    public void Read(NetDataReader reader)
-    {
-        moveInput = reader.GetVector3();
-    }
-
-    public void Write(NetDataWriter writer)
-    {
-        writer.Put(moveInput);
-    }
-
-    public bool ShouldWrite()
-    {
-        return true;
-    }
-
-    public void Clear(NetDataReader reader)
-    {
-        throw new System.NotImplementedException();
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            GetComponent<CubeSphereTransformer>().Transform();
+        }
     }
 
     public void SetEnabled(bool value)
