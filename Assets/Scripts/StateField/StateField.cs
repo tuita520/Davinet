@@ -6,15 +6,15 @@ public abstract class StateField<T> : IStateField
 
     public StateField()
     {
-
+        IsDirty = true;
     }
 
-    public StateField(T value)
+    public StateField(T value) : this()
     {
         this.value = value;
     }
 
-    public StateField(T value, System.Action<T> eventReceiver)
+    public StateField(T value, System.Action<T> eventReceiver) : this()
     {
         OnChanged += eventReceiver;
 
@@ -43,4 +43,5 @@ public abstract class StateField<T> : IStateField
 
     public abstract void Write(NetDataWriter writer);
     public abstract void Read(NetDataReader reader);
+    public abstract void Clear(NetDataReader reader);
 }

@@ -82,7 +82,7 @@ namespace Davinet
         {
             if (arbiter)
             {
-                int id = remoteObjects.statefulObjects.Count + 1;
+                int id = remoteObjects.statefulObjects.Count;
 
                 remoteObjects.statefulObjects.Add(id, o.GetComponent<StatefulObject>());
                 objectsToSpawn.Add(id, o);
@@ -141,13 +141,16 @@ namespace Davinet
             writeAll = false;
         }
 
-        public void WriteStateFields(NetDataWriter writer)
+        public void WriteFields(NetDataWriter writer)
         {
             writer.Put((byte)PacketType.Fields);
 
             foreach (var kvp in remoteObjects.statefulObjects)
             {
-                kvp.Value.WriteStateFields(writer, kvp.Key);
+                if (arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID)
+                {
+                    kvp.Value.WriteStateFields(writer, kvp.Key);
+                }
             }
         }
 
@@ -177,7 +180,7 @@ namespace Davinet
                     ReadState(reader);
                     break;
                 case PacketType.Fields:
-                    ReadStateFields(reader);
+                    ReadFields(reader);
                     break;
                 case PacketType.Spawn:
                     ReadSpawns(reader);
@@ -244,9 +247,26 @@ namespace Davinet
             }
         }
 
-        private void ReadStateFields(NetDataReader reader)
+        private void ReadFields(NetDataReader reader)
         {
+            if (listenRemote)
+                return;
 
+            // Clear the first byte of the payload. This will be
+            // a StatefulObject.DataType.Object enum.
+            // TODO: Should not send the packet if no payload.
+            if (!reader.EndOfData)
+                reader.GetByte();
+
+            while (!reader.EndOfData)
+            {
+                int id = reader.GetInt();
+
+                if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
+                    remoteObjects.statefulObjects[id].ReadStateFields(reader);
+                else
+                    remoteObjects.statefulObjects[id].ReadStateFields(reader, true);
+            }
         }
 
         private void ReadSpawns(NetDataReader reader)

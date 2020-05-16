@@ -127,6 +127,10 @@ namespace Davinet
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
 
+                server.WriteFields(serverWriter);
+                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
+                serverWriter.Reset();
+
                 server.WriteState(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
@@ -140,6 +144,10 @@ namespace Davinet
 
             if (IsClient && !IsServer)
             {
+                client.WriteFields(clientWriter);
+                clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
+                clientWriter.Reset();
+
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
                 clientWriter.Reset();

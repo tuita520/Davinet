@@ -11,7 +11,7 @@ public class CubeSphereTransformer : MonoBehaviour
     [SerializeField]
     Animator animator;
 
-    private StateBool isCube;
+    private StateBool isCube { get; set; }
 
     private void Awake()
     {

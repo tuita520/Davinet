@@ -11,6 +11,11 @@ public class StateBool : StateField<bool>
         Value = reader.GetBool();
     }
 
+    public override void Clear(NetDataReader reader)
+    {
+        reader.GetBool();
+    }
+
     public override void Write(NetDataWriter writer)
     {
         writer.Put(Value);

@@ -2,6 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 using LiteNetLib.Utils;
+using System;
 
 namespace Davinet
 {
@@ -20,20 +21,19 @@ namespace Davinet
         private void Awake()
         {
             stateFieldsByMonoBehaviour = new List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>>();
-        }
 
-        private void Start()
-        {
             MonoBehaviour[] monoBehaviours = GetComponentsInChildren<MonoBehaviour>();
 
             foreach (MonoBehaviour monoBehaviour in monoBehaviours)
             {
                 List<PropertyInfo> propertyInfos = null;
 
+                Type type = monoBehaviour.GetType();
+
                 foreach (PropertyInfo propertyInfo in
-                    monoBehaviour.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic))
+                    type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                 {
-                    if (propertyInfo is IStateField)
+                    if (typeof(IStateField).IsAssignableFrom(propertyInfo.PropertyType))
                     {
                         if (propertyInfos == null)
                             propertyInfos = new List<PropertyInfo>();
@@ -94,11 +94,11 @@ namespace Davinet
             }
         }
 
-        public void ReadStateFields(NetDataReader reader)
+        public void ReadStateFields(NetDataReader reader, bool clear=false)
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
 
-            while (true)
+            while (!reader.EndOfData)
             {
                 DataType datatype = (DataType)reader.GetByte();
 
@@ -117,7 +117,11 @@ namespace Davinet
                 {
                     int fieldIndex = reader.GetInt();
                     IStateField field = (IStateField)selectedBehaviour.Value[fieldIndex].GetValue(selectedBehaviour.Key);
-                    field.Read(reader);
+
+                    if (!clear)
+                        field.Read(reader);
+                    else
+                        field.Clear(reader);
                 }
             }
         }
