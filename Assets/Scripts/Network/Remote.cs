@@ -36,7 +36,6 @@ namespace Davinet
             eventBasedNetListener.ConnectionRequestEvent += EventBasedNetListener_ConnectionRequestEvent;
             eventBasedNetListener.PeerConnectedEvent += EventBasedNetListener_PeerConnectedEvent;
 
-            objectsToWrite = new Dictionary<int, OwnableObject>();
             objectsToSpawn = new Dictionary<int, IdentifiableObject>();
 
             SetOwnershipWriter = new NetDataWriter();
@@ -111,7 +110,6 @@ namespace Davinet
         }
 
         private Dictionary<int, IdentifiableObject> objectsToSpawn;
-        private Dictionary<int, OwnableObject> objectsToWrite;
 
         public void WriteState(NetDataWriter writer)
         {
@@ -135,19 +133,11 @@ namespace Davinet
             {
                 if ((arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAll))
                 {
-                    objectsToWrite.Add(kvp.Key, kvp.Value.GetComponent<OwnableObject>());
+                    writer.Put(kvp.Key);
+                    kvp.Value.GetComponent<IStateful>().Write(writer);
                 }
             }
 
-            writer.Put(objectsToWrite.Count);
-
-            foreach (var kvp in objectsToWrite)
-            {
-                writer.Put(kvp.Key);
-                kvp.Value.GetComponent<IStateful>().Write(writer);
-            }
-            
-            objectsToWrite.Clear();
             writeAll = false;
         }
 
@@ -243,19 +233,14 @@ namespace Davinet
             */
             #endregion
 
-            int stateCount = reader.GetInt();
-
-            for (int i = 0; i < stateCount; i++)
+            while (!reader.EndOfData)
             {
                 int id = reader.GetInt();
-
-                if (remoteObjects.statefulObjects.ContainsKey(id))
-                {
-                    if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
-                        remoteObjects.statefulObjects[id].GetComponent<IStateful>().Read(reader);
-                    else
-                        remoteObjects.statefulObjects[id].GetComponent<IStateful>().Clear(reader);
-                }
+                
+                if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
+                    remoteObjects.statefulObjects[id].GetComponent<IStateful>().Read(reader);
+                else
+                    remoteObjects.statefulObjects[id].GetComponent<IStateful>().Clear(reader);                
             }
         }
 
