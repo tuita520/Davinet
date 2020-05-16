@@ -47,7 +47,7 @@ namespace Davinet
             }
         }
 
-        public void WriteStateFields(NetDataWriter writer, int id)
+        public void WriteStateFields(NetDataWriter writer, int id, bool writeEvenIfNotDirty=false)
         {
             bool objectHeaderWritten, behaviourHeaderWritten;
 
@@ -65,7 +65,7 @@ namespace Davinet
 
                     IStateField field = (IStateField)info.GetValue(kvp.Key);
 
-                    if (field.IsDirty)
+                    if (field.IsDirty || writeEvenIfNotDirty)
                     {
                         // If this is the first field written for this object,
                         // we need to write in this object's ID.

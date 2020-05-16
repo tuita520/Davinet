@@ -23,7 +23,9 @@ namespace Davinet
         private int remoteID;
         private Dictionary<int, NetPeer> peersByIndex;
         private RemoteObjects remoteObjects;
-        private bool writeAll;
+
+        private bool writeAllStates;
+        private bool writeAllFields;
 
         public Remote(RemoteObjects remoteObjects, bool arbiter, bool listenRemote)
         {            
@@ -68,7 +70,8 @@ namespace Davinet
                 Spawn(player);
                 SetOwnership(player.GetComponent<OwnableObject>(), id);
 
-                writeAll = true;
+                writeAllStates = true;
+                writeAllFields = true;
             }
         }
 
@@ -131,14 +134,14 @@ namespace Davinet
             // Object state serialization.
             foreach (var kvp in remoteObjects.statefulObjects)
             {
-                if ((arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAll))
+                if ((arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAllStates))
                 {
                     writer.Put(kvp.Key);
                     kvp.Value.GetComponent<IStateful>().Write(writer);
                 }
             }
 
-            writeAll = false;
+            writeAllStates = false;
         }
 
         public void WriteFields(NetDataWriter writer)
@@ -149,9 +152,11 @@ namespace Davinet
             {
                 if (arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID)
                 {
-                    kvp.Value.WriteStateFields(writer, kvp.Key);
+                    kvp.Value.WriteStateFields(writer, kvp.Key, writeAllFields);
                 }
             }
+
+            writeAllFields = false;
         }
 
         public void WriteSpawns(NetDataWriter writer)
