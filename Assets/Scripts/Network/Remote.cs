@@ -2,6 +2,7 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Davinet
 {
@@ -60,7 +61,7 @@ namespace Davinet
                 foreach (var kvp in remoteObjects.statefulObjects)
                 {
                     objectsToSpawn.Add(kvp.Key, kvp.Value.GetComponent<IdentifiableObject>());
-                    SetOwnership(kvp.Value, kvp.Value.Owner);
+                    SetOwnership(kvp.Value.GetComponent<OwnableObject>(), kvp.Value.GetComponent<OwnableObject>().Owner);
                 }
 
                 var player = Object.Instantiate((remoteObjects.registeredPrefabs[1717083505]));
@@ -84,7 +85,7 @@ namespace Davinet
             {
                 int id = remoteObjects.statefulObjects.Count + 1;
 
-                remoteObjects.statefulObjects.Add(id, o.GetComponent<OwnableObject>());
+                remoteObjects.statefulObjects.Add(id, o.GetComponent<StatefulObject>());
                 objectsToSpawn.Add(id, o);
             }
         }
@@ -98,7 +99,7 @@ namespace Davinet
 
                 foreach (var kvp in remoteObjects.statefulObjects)
                 {
-                    if (kvp.Value == r)
+                    if (kvp.Value.GetComponent<OwnableObject>() == r)
                     {
                         SetOwnershipWriter.Put(owner);
                         SetOwnershipWriter.Put(kvp.Key);
@@ -132,9 +133,9 @@ namespace Davinet
             // Object state serialization.
             foreach (var kvp in remoteObjects.statefulObjects)
             {
-                if ((arbiter || kvp.Value.Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAll))
+                if ((arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAll))
                 {
-                    objectsToWrite.Add(kvp.Key, kvp.Value);
+                    objectsToWrite.Add(kvp.Key, kvp.Value.GetComponent<OwnableObject>());
                 }
             }
 
@@ -148,6 +149,16 @@ namespace Davinet
             
             objectsToWrite.Clear();
             writeAll = false;
+        }
+
+        public void WriteStateFields(NetDataWriter writer)
+        {
+            writer.Put((byte)PacketType.Fields);
+
+            foreach (var kvp in remoteObjects.statefulObjects)
+            {
+                kvp.Value.WriteStateFields(writer, kvp.Key);
+            }
         }
 
         public void WriteSpawns(NetDataWriter writer)
@@ -174,6 +185,9 @@ namespace Davinet
             {
                 case PacketType.State:
                     ReadState(reader);
+                    break;
+                case PacketType.Fields:
+                    ReadStateFields(reader);
                     break;
                 case PacketType.Spawn:
                     ReadSpawns(reader);
@@ -237,12 +251,17 @@ namespace Davinet
 
                 if (remoteObjects.statefulObjects.ContainsKey(id))
                 {
-                    if (remoteObjects.statefulObjects[id].Owner != remoteID)
+                    if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
                         remoteObjects.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                     else
                         remoteObjects.statefulObjects[id].GetComponent<IStateful>().Clear(reader);
                 }
             }
+        }
+
+        private void ReadStateFields(NetDataReader reader)
+        {
+
         }
 
         private void ReadSpawns(NetDataReader reader)
@@ -260,7 +279,7 @@ namespace Davinet
                 if (!remoteObjects.statefulObjects.ContainsKey(id))
                 {
                     IdentifiableObject clone = Object.Instantiate(remoteObjects.registeredPrefabs[GUID], Vector3.zero, Quaternion.identity);
-                    remoteObjects.statefulObjects[id] = clone.GetComponent<OwnableObject>();
+                    remoteObjects.statefulObjects[id] = clone.GetComponent<StatefulObject>();
                 }
             }
         }

@@ -9,16 +9,16 @@ namespace Davinet
 
         // TODO: Make input polymorphic.
         // public Dictionary<int, PlayerInputController> inputControllers;
-        public Dictionary<int, OwnableObject> statefulObjects;
+        public Dictionary<int, StatefulObject> statefulObjects;
 
         public RemoteObjects(Dictionary<int, IdentifiableObject> registeredPrefabs)
         {
             this.registeredPrefabs = registeredPrefabs;
 
-            statefulObjects = new Dictionary<int, OwnableObject>();
+            statefulObjects = new Dictionary<int, StatefulObject>();
             int i = 0;
 
-            foreach (OwnableObject statefulObject in Object.FindObjectsOfType<OwnableObject>())
+            foreach (StatefulObject statefulObject in Object.FindObjectsOfType<StatefulObject>())
             {
                 statefulObjects[i] = statefulObject;
                 i++;

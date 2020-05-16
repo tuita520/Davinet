@@ -11,13 +11,11 @@ public class CubeSphereTransformer : MonoBehaviour
     [SerializeField]
     Animator animator;
 
-    private StateField<bool> isCube;
+    private StateBool isCube;
 
     private void Awake()
     {
-        isCube = new StateField<bool>(true, IsCube_OnChanged);
-
-        IsCube_OnChanged(true);
+        isCube = new StateBool(true, IsCube_OnChanged);
     }
 
     private void IsCube_OnChanged(bool value)

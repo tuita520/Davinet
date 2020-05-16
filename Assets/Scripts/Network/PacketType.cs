@@ -5,6 +5,7 @@
         Spawn,
         SetOwnership,
         State,
+        Fields,
         Join
     }
 }
