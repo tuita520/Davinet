@@ -8,6 +8,8 @@ namespace Davinet
 {
     public class StatefulObject : MonoBehaviour
     {
+        public int ID { get; set; }
+
         public enum DataType
         {
             Object,
@@ -15,7 +17,7 @@ namespace Davinet
             Field
         };
 
-        // TODO: Make this a custom data type for ease of use.
+        // TODO: Maybe make this a custom data type for ease of use?
         private List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>> stateFieldsByMonoBehaviour;
 
         private void Awake()
@@ -102,7 +104,7 @@ namespace Davinet
             {
                 DataType datatype = (DataType)reader.GetByte();
 
-                // We have reader all of the fields for every behaviour
+                // We have read all of the fields for every behaviour
                 // on this object.
                 if (datatype == DataType.Object)
                 {
@@ -121,7 +123,7 @@ namespace Davinet
                     if (!clear)
                         field.Read(reader);
                     else
-                        field.Clear(reader);
+                        field.Pass(reader);
                 }
             }
         }

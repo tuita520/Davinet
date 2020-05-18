@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 4452351226691291766}
   - component: {fileID: -3199013386439312789}
   - component: {fileID: 3903186559239542033}
+  - component: {fileID: -6354422438176271042}
   m_Layer: 0
   m_Name: RigidbodyCube
   m_TagString: Untagged
@@ -175,5 +176,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6999b5a4b31abac41b62a66954c71bf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-6354422438176271042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8221979510549507898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90596c3b217e6b642806d4ce2b7cf88b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

@@ -1,5 +1,4 @@
-﻿using LiteNetLib.Utils;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerInputController : MonoBehaviour, IInputController
 {
@@ -35,6 +34,28 @@ public class PlayerInputController : MonoBehaviour, IInputController
         if (Input.GetKeyDown(KeyCode.T))
         {
             GetComponent<CubeSphereTransformer>().Transform();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            GetComponent<PowerController>().SetPowerActive(0);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            GetComponent<PowerController>().SetPowerActive(1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            GetComponent<PowerController>().SetPowerActive(2);
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            GetComponent<ThrowPower>().Use(ray);
         }
     }
 

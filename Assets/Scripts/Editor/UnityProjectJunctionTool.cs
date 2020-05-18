@@ -1,14 +1,13 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Threading;
 using System.Diagnostics;
 
 namespace Davinet
 {
     public class UnityProjectJunctionTool : MonoBehaviour
     {
-        [MenuItem("DaviNet/Create Junction Unity Project")]
+        [MenuItem("Davinet/Create Junction Unity Project")]
         private static void CreateJunctionUnityProject()
         {
             DirectoryInfo currentDirectoryInfo = new DirectoryInfo(Directory.GetCurrentDirectory());

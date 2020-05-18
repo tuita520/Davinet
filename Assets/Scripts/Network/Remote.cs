@@ -2,7 +2,6 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Davinet
 {
@@ -22,16 +21,19 @@ namespace Davinet
 
         private int remoteID;
         private Dictionary<int, NetPeer> peersByIndex;
-        private RemoteObjects remoteObjects;
+        private StatefulWorld statefulWorld;
 
         private bool writeAllStates;
         private bool writeAllFields;
 
-        public Remote(RemoteObjects remoteObjects, bool arbiter, bool listenRemote)
+        public Remote(StatefulWorld statefulWorld, bool arbiter, bool listenRemote)
         {            
             this.arbiter = arbiter;
             this.listenRemote = listenRemote;
-            this.remoteObjects = remoteObjects;
+            this.statefulWorld = statefulWorld;
+
+            statefulWorld.OnAdd += Spawn;
+            statefulWorld.OnSetOwnership += StatefulWorld_OnSetOwnership;
 
             eventBasedNetListener = new EventBasedNetListener();
             eventBasedNetListener.NetworkReceiveEvent += Read;
@@ -59,16 +61,15 @@ namespace Davinet
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
                 writer.Reset();
 
-                foreach (var kvp in remoteObjects.statefulObjects)
+                foreach (var kvp in statefulWorld.statefulObjects)
                 {
                     objectsToSpawn.Add(kvp.Key, kvp.Value.GetComponent<IdentifiableObject>());
-                    SetOwnership(kvp.Value.GetComponent<OwnableObject>(), kvp.Value.GetComponent<OwnableObject>().Owner);
+                    statefulWorld.SetOwnership(kvp.Value.GetComponent<OwnableObject>(), kvp.Value.GetComponent<OwnableObject>().Owner);
                 }
 
-                var player = Object.Instantiate((remoteObjects.registeredPrefabs[1717083505]));
-
-                Spawn(player);
-                SetOwnership(player.GetComponent<OwnableObject>(), id);
+                var player = Object.Instantiate((statefulWorld.registeredPrefabsMap[1717083505]));
+                statefulWorld.Add(player.GetComponent<StatefulObject>());
+                statefulWorld.SetOwnership(player.GetComponent<OwnableObject>(), id);
 
                 writeAllStates = true;
                 writeAllFields = true;
@@ -81,34 +82,21 @@ namespace Davinet
             request.Accept();
         }
 
-        public void Spawn(IdentifiableObject o)
+        private void StatefulWorld_OnSetOwnership(OwnableObject o)
         {
-            if (arbiter)
-            {
-                int id = remoteObjects.statefulObjects.Count;
+            if (SetOwnershipWriter.Length == 0)
+                SetOwnershipWriter.Put((byte)PacketType.SetOwnership);
 
-                remoteObjects.statefulObjects.Add(id, o.GetComponent<StatefulObject>());
-                objectsToSpawn.Add(id, o);
-            }
+            SetOwnershipWriter.Put(o.Owner);
+            SetOwnershipWriter.Put(o.GetComponent<StatefulObject>().ID);
         }
 
-        public void SetOwnership(OwnableObject r, int owner)
+        private void Spawn(StatefulObject obj)
         {
             if (arbiter)
             {
-                if (SetOwnershipWriter.Length == 0)
-                    SetOwnershipWriter.Put((byte)PacketType.SetOwnership);
-
-                foreach (var kvp in remoteObjects.statefulObjects)
-                {
-                    if (kvp.Value.GetComponent<OwnableObject>() == r)
-                    {
-                        SetOwnershipWriter.Put(owner);
-                        SetOwnershipWriter.Put(kvp.Key);
-                        r.gameObject.GetComponent<OwnableObject>().SetOwner(owner, owner == remoteID);
-                        return;
-                    }
-                }
+                IdentifiableObject o = obj.GetComponent<IdentifiableObject>();
+                objectsToSpawn.Add(obj.ID, o);
             }
         }
 
@@ -118,21 +106,8 @@ namespace Davinet
         {
             writer.Put((byte)PacketType.State);
 
-            #region Input
-            // Input serialization.
-            /*
-            writer.Put(inputControllers.Count);
-
-            foreach (var kvp in inputControllers)
-            {
-                writer.Put(kvp.Key);
-                kvp.Value.GetComponent<IStreamable>().Write(writer);
-            }
-            */
-            #endregion
-
             // Object state serialization.
-            foreach (var kvp in remoteObjects.statefulObjects)
+            foreach (var kvp in statefulWorld.statefulObjects)
             {
                 if ((arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAllStates))
                 {
@@ -148,7 +123,7 @@ namespace Davinet
         {
             writer.Put((byte)PacketType.Fields);
 
-            foreach (var kvp in remoteObjects.statefulObjects)
+            foreach (var kvp in statefulWorld.statefulObjects)
             {
                 if (arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID)
                 {
@@ -208,8 +183,11 @@ namespace Davinet
                 int owner = reader.GetInt();
                 int id = reader.GetInt();
 
-                remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().SetOwner(owner, owner == remoteID);
-                Debug.Log($"Granting ownership of {remoteObjects.statefulObjects[id].name} to peer {owner}");
+                statefulWorld.statefulObjects[id].GetComponent<OwnableObject>().Owner = owner;
+                IInputController inputController = statefulWorld.statefulObjects[id].GetComponent<IInputController>();
+
+                if (inputController != null)
+                    inputController.SetEnabled(owner == remoteID);
             }
         }
 
@@ -224,31 +202,14 @@ namespace Davinet
             if (listenRemote)
                 return;
 
-            #region Input
-            // Input deserialization.
-            /*
-            int inputCount = reader.GetInt();
-
-            for (int i = 0; i < inputCount; i++)
-            {
-                int id = reader.GetInt();
-
-                if (inputControllers.ContainsKey(id))
-                {
-                    inputControllers[id].Read(reader);
-                }
-            }
-            */
-            #endregion
-
             while (!reader.EndOfData)
             {
                 int id = reader.GetInt();
                 
-                if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
-                    remoteObjects.statefulObjects[id].GetComponent<IStateful>().Read(reader);
+                if (statefulWorld.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
+                    statefulWorld.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                 else
-                    remoteObjects.statefulObjects[id].GetComponent<IStateful>().Clear(reader);                
+                    statefulWorld.statefulObjects[id].GetComponent<IStateful>().Clear(reader);                
             }
         }
 
@@ -267,10 +228,10 @@ namespace Davinet
             {
                 int id = reader.GetInt();
 
-                if (remoteObjects.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
-                    remoteObjects.statefulObjects[id].ReadStateFields(reader);
+                if (statefulWorld.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
+                    statefulWorld.statefulObjects[id].ReadStateFields(reader);
                 else
-                    remoteObjects.statefulObjects[id].ReadStateFields(reader, true);
+                    statefulWorld.statefulObjects[id].ReadStateFields(reader, true);
             }
         }
 
@@ -286,10 +247,10 @@ namespace Davinet
                 int GUID = reader.GetInt();
 
                 // Check if it's already been spawned.
-                if (!remoteObjects.statefulObjects.ContainsKey(id))
+                if (!statefulWorld.statefulObjects.ContainsKey(id))
                 {
-                    IdentifiableObject clone = Object.Instantiate(remoteObjects.registeredPrefabs[GUID], Vector3.zero, Quaternion.identity);
-                    remoteObjects.statefulObjects[id] = clone.GetComponent<StatefulObject>();
+                    IdentifiableObject clone = Object.Instantiate(statefulWorld.registeredPrefabsMap[GUID], Vector3.zero, Quaternion.identity);
+                    statefulWorld.statefulObjects[id] = clone.GetComponent<StatefulObject>();
                 }
             }
         }

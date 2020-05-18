@@ -1,15 +1,10 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
-        [SerializeField]
-        IdentifiableObject[] registeredPrefabs;
-
         public bool IsServer => server != null;
         public bool IsClient => client != null;
 
@@ -42,17 +37,7 @@ namespace Davinet
         private void Awake()
         {
             enabled = false;
-
-            registeredPrefabsMap = new Dictionary<int, IdentifiableObject>();
-
-            foreach (IdentifiableObject registeredPrefab in registeredPrefabs)
-            {
-                registeredPrefabsMap[registeredPrefab.GUID] = registeredPrefab;
-            }
         }
-
-        private Dictionary<int, IdentifiableObject> registeredPrefabsMap;
-        private RemoteObjects remoteObjects;
 
         // Transport layer network manager.
         private NetManager serverManager;
@@ -73,9 +58,9 @@ namespace Davinet
 
         public void StartServer(int port, NetworkDebug debug=null)
         {
-            remoteObjects = new RemoteObjects(registeredPrefabsMap);
+            StatefulWorld.Instance.Initialize();
 
-            server = new Remote(remoteObjects, true, false);
+            server = new Remote(StatefulWorld.Instance, true, false);
             serverManager = new NetManager(server.NetEventListener);
 
             if (debug != null)
@@ -96,10 +81,10 @@ namespace Davinet
 
         public void ConnectClient(string address, int port, NetworkDebug debug = null)
         {
-            if (remoteObjects == null)
-                remoteObjects = new RemoteObjects(registeredPrefabsMap);
+            if (!IsServer)
+                StatefulWorld.Instance.Initialize();
 
-            client = new Remote(remoteObjects, false, IsServer);
+            client = new Remote(StatefulWorld.Instance, false, IsServer);
             clientManager = new NetManager(client.NetEventListener);
 
             if (debug != null)

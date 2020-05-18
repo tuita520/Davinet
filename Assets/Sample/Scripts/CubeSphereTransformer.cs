@@ -18,12 +18,12 @@ public class CubeSphereTransformer : MonoBehaviour
         isCube = new StateBool(true, IsCube_OnChanged);
     }
 
-    private void IsCube_OnChanged(bool value)
+    private void IsCube_OnChanged(bool current, bool previous)
     {
-        cube.SetActive(value);
-        sphere.SetActive(!value);
+        cube.SetActive(current);
+        sphere.SetActive(!current);
 
-        animator.SetBool("IsCube", value);
+        animator.SetBool("IsCube", current);
     }
 
     public void Transform()

@@ -2,7 +2,10 @@
 
 public abstract class StateField<T> : IStateField
 {
-    public event System.Action<T> OnChanged;
+    /// <summary>
+    /// Parameters are the new value and previous value.
+    /// </summary>
+    public event System.Action<T, T> OnChanged;
 
     public StateField()
     {
@@ -14,7 +17,7 @@ public abstract class StateField<T> : IStateField
         this.value = value;
     }
 
-    public StateField(T value, System.Action<T> eventReceiver) : this()
+    public StateField(T value, System.Action<T, T> eventReceiver) : this()
     {
         OnChanged += eventReceiver;
 
@@ -30,10 +33,10 @@ public abstract class StateField<T> : IStateField
 
         set
         {
-            this.value = value;
-            IsDirty = true;
+            OnChanged(value, this.value);
 
-            OnChanged(this.value);
+            this.value = value;
+            IsDirty = true;            
         }
     }
 
@@ -43,5 +46,5 @@ public abstract class StateField<T> : IStateField
 
     public abstract void Write(NetDataWriter writer);
     public abstract void Read(NetDataReader reader);
-    public abstract void Clear(NetDataReader reader);
+    public abstract void Pass(NetDataReader reader);
 }
