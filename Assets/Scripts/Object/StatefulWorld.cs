@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Davinet
 {
+    // Can't spell Singleton without sin.
     public class StatefulWorld : SingletonBehaviour<StatefulWorld>
     {
         [SerializeField]
@@ -14,6 +15,8 @@ namespace Davinet
 
         public Dictionary<int, IdentifiableObject> registeredPrefabsMap;
         public Dictionary<int, StatefulObject> statefulObjects;
+
+        public int Frame { get; set; }
 
         private void Awake()
         {

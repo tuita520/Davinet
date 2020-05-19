@@ -12,7 +12,7 @@ namespace Davinet
         private EventBasedNetListener eventBasedNetListener;
 
         /// <summary>
-        /// There is only one arbiter per session. The arbiter by default has authority over all objects.
+        /// There is only one arbiter per session. The arbiter by default has ownership over all objects.
         /// </summary>
         private bool arbiter;
         private bool listenRemote;
@@ -89,6 +89,11 @@ namespace Davinet
 
             SetOwnershipWriter.Put(o.Owner);
             SetOwnershipWriter.Put(o.GetComponent<StatefulObject>().ID);
+
+            IInputController inputController = statefulWorld.statefulObjects[o.GetComponent<StatefulObject>().ID].GetComponent<IInputController>();
+
+            if (inputController != null)
+                inputController.SetEnabled(o.Owner == remoteID);
         }
 
         private void Spawn(StatefulObject obj)

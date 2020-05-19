@@ -106,17 +106,19 @@ namespace Davinet
 
         private void FixedUpdate()
         {
+            StatefulWorld.Instance.Frame++;
+
             if (IsServer)
             {
                 server.WriteSpawns(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
 
-                server.WriteFields(serverWriter);
+                server.WriteState(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
 
-                server.WriteState(serverWriter);
+                server.WriteFields(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
 
