@@ -13,9 +13,19 @@ public class CubeSphereTransformer : MonoBehaviour
 
     private StateBool isCube { get; set; }
 
+    private PlayerInputController playerInputController;
+
     private void Awake()
     {
         isCube = new StateBool(true, IsCube_OnChanged);
+
+        playerInputController = GetComponent<PlayerInputController>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (playerInputController.CurrentInput.transformDown)
+            isCube.Value = !isCube.Value;
     }
 
     private void IsCube_OnChanged(bool current, bool previous)
@@ -24,10 +34,5 @@ public class CubeSphereTransformer : MonoBehaviour
         sphere.SetActive(!current);
 
         animator.SetBool("IsCube", current);
-    }
-
-    public void Transform()
-    {
-        isCube.Value = !isCube.Value;
     }
 }

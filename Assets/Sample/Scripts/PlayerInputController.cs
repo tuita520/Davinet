@@ -5,58 +5,61 @@ public class PlayerInputController : MonoBehaviour, IInputController
     [SerializeField]
     float maxSpeed = 5;
 
-    public bool TransformPressed { get; private set; }
-    private Vector3 moveInput;
+    public PlayerInput CurrentInput { get; private set; }
+
+    private bool hasFixedUpdateRun;
+
+    private void Awake()
+    {
+        CurrentInput = new PlayerInput();
+
+        CurrentInput.Clear();
+    }
 
     private void Update()
     {
-        moveInput = Vector3.zero;
+        if (hasFixedUpdateRun)
+        {
+            CurrentInput.Clear();
+            hasFixedUpdateRun = false;
+        }
+
+        CurrentInput.mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Input.GetMouseButton(0))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
             Plane plane = new Plane(Vector3.up, Vector3.zero);
 
             float d;
-            plane.Raycast(ray, out d);
+            plane.Raycast(CurrentInput.mouseRay, out d);
 
             if (d > 0)
             {
-                Vector3 target = ray.origin + ray.direction * d;
+                Vector3 target = CurrentInput.mouseRay.origin + CurrentInput.mouseRay.direction * d;
 
-                moveInput = Vector3.ClampMagnitude(target - transform.position, maxSpeed);
+                CurrentInput.moveInput = Vector3.ClampMagnitude(target - transform.position, maxSpeed);
             }
         }
 
-        GetComponent<RigidbodyDrag>().MoveInput = moveInput;
-
         if (Input.GetKeyDown(KeyCode.T))
-        {
-            GetComponent<CubeSphereTransformer>().Transform();
-        }
+            CurrentInput.transformDown = true;
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            GetComponent<PowerController>().SetPowerActive(0);
-        }
+            CurrentInput.setPowerDown = 0;
 
         if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            GetComponent<PowerController>().SetPowerActive(1);
-        }
+            CurrentInput.setPowerDown = 1;
 
         if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            GetComponent<PowerController>().SetPowerActive(2);
-        }
+            CurrentInput.setPowerDown = 2;
 
         if (Input.GetMouseButtonDown(1))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            CurrentInput.usePowerDown = true;
+    }
 
-            GetComponent<ThrowPower>().Use(ray);
-        }
+    private void FixedUpdate()
+    {
+        hasFixedUpdateRun = true;
     }
 
     public void SetEnabled(bool value)

@@ -7,8 +7,6 @@ public class RigidbodyDrag : MonoBehaviour
 
     private Rigidbody rb;
 
-    public Vector3 MoveInput { private get; set; }
-
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -16,6 +14,6 @@ public class RigidbodyDrag : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.AddForce(MoveInput * speed);
+        rb.AddForce(GetComponent<PlayerInputController>().CurrentInput.moveInput * speed);
     }
 }

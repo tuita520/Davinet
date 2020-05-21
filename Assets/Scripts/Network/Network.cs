@@ -37,6 +37,9 @@ namespace Davinet
         private void Awake()
         {
             enabled = false;
+
+            gameObject.AddComponent<BeforeFixedUpdate>().OnBeforeFixedUpdate += OnBeforeFrame;
+            gameObject.AddComponent<AfterFixedUpdate>().OnAfterFixedUpdate += OnAfterFrame;
         }
 
         // Transport layer network manager.
@@ -104,9 +107,24 @@ namespace Davinet
             enabled = true;
         }
 
-        private void FixedUpdate()
+        private void OnBeforeFrame()
         {
+            if (!enabled)
+                return;
+
             StatefulWorld.Instance.Frame++;
+
+            if (IsServer)
+                serverManager.PollEvents();
+
+            if (IsClient)
+                clientManager.PollEvents();
+        }
+
+        private void OnAfterFrame()
+        {
+            if (!enabled)
+                return;
 
             if (IsServer)
             {
@@ -138,13 +156,13 @@ namespace Davinet
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
                 clientWriter.Reset();
+
+                if (client.SetOwnershipWriter.Length > 0)
+                {
+                    clientManager.SendToAll(client.SetOwnershipWriter, DeliveryMethod.ReliableOrdered);
+                    client.SetOwnershipWriter.Reset();
+                }
             }
-
-            if (IsServer)
-                serverManager.PollEvents();
-
-            if (IsClient)
-                clientManager.PollEvents();
         }
     }
 }

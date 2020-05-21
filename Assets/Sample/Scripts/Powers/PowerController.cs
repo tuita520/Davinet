@@ -7,9 +7,19 @@ public class PowerController : MonoBehaviour
 
     private StateInt activePower { get; set; }
 
+    private PlayerInputController playerInputController;
+
     private void Awake()
     {
         activePower = new StateInt(0, ActivePower_OnChanged);
+
+        playerInputController = GetComponent<PlayerInputController>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (playerInputController.CurrentInput.setPowerDown != -1)
+            activePower.Value = playerInputController.CurrentInput.setPowerDown;
     }
 
     private void ActivePower_OnChanged(int current, int previous)
@@ -18,10 +28,5 @@ public class PowerController : MonoBehaviour
         {
             powers[i].enabled = i == current;
         }
-    }
-
-    public void SetPowerActive(int powerIndex)
-    {
-        activePower.Value = powerIndex;
     }
 }

@@ -6,9 +6,11 @@ using System;
 
 namespace Davinet
 {
+    [RequireComponent(typeof(OwnableObject))]
     public class StatefulObject : MonoBehaviour
     {
         public int ID { get; set; }
+        public OwnableObject Ownable { get; private set; }
 
         public enum DataType
         {
@@ -22,6 +24,8 @@ namespace Davinet
 
         private void Awake()
         {
+            Ownable = GetComponent<OwnableObject>();
+
             stateFieldsByMonoBehaviour = new List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>>();
 
             MonoBehaviour[] monoBehaviours = GetComponentsInChildren<MonoBehaviour>();

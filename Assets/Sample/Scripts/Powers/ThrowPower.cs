@@ -14,6 +14,8 @@ public class ThrowPower : MonoBehaviour
 
     private StateObjectReference heldObject { get; set; }
 
+    private PlayerInputController playerInputController;
+
     private void Awake()
     {
         heldObject = new StateObjectReference();
@@ -22,10 +24,13 @@ public class ThrowPower : MonoBehaviour
         grabSphere.transform.parent = null;
 
         grabSphere.SetActive(false);
+
+        playerInputController = GetComponent<PlayerInputController>();
     }
 
     private void OnEnable()
     {
+        grabSphere.transform.position = transform.position + Vector3.up * heightOffset;
         grabSphere.SetActive(true);
     }
 
@@ -45,7 +50,7 @@ public class ThrowPower : MonoBehaviour
         if (previous != null)
         {
             previous.GetComponent<Rigidbody>().isKinematic = false;
-            // StatefulWorld.Instance.RelinquishOwnership(previous.GetComponent<OwnableObject>());
+            StatefulWorld.Instance.RelinquishOwnership(previous.GetComponent<OwnableObject>());
         }
     }
 
@@ -58,13 +63,13 @@ public class ThrowPower : MonoBehaviour
         {
             heldObject.Value.GetComponent<Rigidbody>().position = grabPosition;
         }
+
+        if (playerInputController.CurrentInput.usePowerDown)
+            Use(playerInputController.CurrentInput.mouseRay);
     }
 
-    public void Use(Ray ray)
+    private void Use(Ray ray)
     {
-        if (!enabled)
-            return;
-
         if (heldObject.Value != null)
         {
             Plane plane = new Plane(Vector3.up, Vector3.zero);
