@@ -17,8 +17,6 @@ namespace Davinet
         private bool arbiter;
         private bool listenRemote;
 
-        public NetDataWriter SetOwnershipWriter { get; private set; }
-
         private int remoteID;
         private Dictionary<int, NetPeer> peersByIndex;
         private StatefulWorld world;
@@ -27,7 +25,7 @@ namespace Davinet
         private bool writeAllFields;
 
         public Remote(StatefulWorld world, bool arbiter, bool listenRemote)
-        {            
+        {
             this.arbiter = arbiter;
             this.listenRemote = listenRemote;
             this.world = world;
@@ -41,11 +39,12 @@ namespace Davinet
             eventBasedNetListener.PeerConnectedEvent += EventBasedNetListener_PeerConnectedEvent;
 
             objectsToSpawn = new Dictionary<int, IdentifiableObject>();
+            ownershipTransfers = new HashSet<StatefulObject>();
 
-            SetOwnershipWriter = new NetDataWriter();
             peersByIndex = new Dictionary<int, NetPeer>();
         }
 
+        #region TODO: Move this out of here
         private void EventBasedNetListener_PeerConnectedEvent(NetPeer peer)
         {
             Debug.Log("Peer connected.");
@@ -58,6 +57,7 @@ namespace Davinet
                 NetDataWriter writer = new NetDataWriter();
                 writer.Put((byte)PacketType.Join);
                 writer.Put(id);
+                writer.Put(world.Frame);
                 peer.Send(writer, DeliveryMethod.ReliableOrdered);
                 writer.Reset();
 
@@ -81,10 +81,11 @@ namespace Davinet
             Debug.Log("Connection requested.");
             request.Accept();
         }
+        #endregion
 
         private void StatefulWorld_OnSetOwnership(OwnableObject o)
         {
-            WriteOwnership(o);
+            SetOwnership(o);
         }
 
         private void StatefulWorld_OnAdd(StatefulObject obj)
@@ -96,13 +97,79 @@ namespace Davinet
             }
         }
 
+        private void ReadJoin(NetPacketReader reader)
+        {
+            remoteID = reader.GetInt();
+            int frame = reader.GetInt();
+
+            if (!listenRemote)
+                world.Frame = frame;
+
+            Debug.Log($"Local client assigned id {remoteID}");
+        }
+
+        #region Write
         private Dictionary<int, IdentifiableObject> objectsToSpawn;
+        private HashSet<StatefulObject> ownershipTransfers;
 
         public void WriteState(NetDataWriter writer)
-        {            
+        {
             writer.Put((byte)PacketType.State);
             writer.Put(world.Frame);
 
+            int offset = sizeof(byte) + sizeof(int);
+
+            // Reserve positions for the length of the data for
+            // spawns, ownership, statefuls, and fields (in order).
+            writer.Put(0);
+            writer.Put(0);
+            writer.Put(0);
+            writer.Put(0);
+
+            int beforeLength = writer.Length;
+            WriteSpawns(writer);
+            int spawnsLength = writer.Length - beforeLength;
+
+            beforeLength = writer.Length;
+            WriteOwnership(writer);
+            int ownershipLength = writer.Length - beforeLength;
+
+            beforeLength = writer.Length;
+            WriteStateful(writer);
+            int statefulLength = writer.Length - beforeLength;
+
+            beforeLength = writer.Length;
+            WriteFields(writer);
+            int fieldsLength = writer.Length - beforeLength;
+
+            // Set the values of the reserved positions.
+            byte[] spawnsBytes = System.BitConverter.GetBytes(spawnsLength);
+            writer.Data[offset + 0] = spawnsBytes[0];
+            writer.Data[offset + 1] = spawnsBytes[1];
+            writer.Data[offset + 2] = spawnsBytes[2];
+            writer.Data[offset + 3] = spawnsBytes[3];
+
+            byte[] ownershipBytes = System.BitConverter.GetBytes(ownershipLength);
+            writer.Data[offset + 4] = ownershipBytes[0];
+            writer.Data[offset + 5] = ownershipBytes[1];
+            writer.Data[offset + 6] = ownershipBytes[2];
+            writer.Data[offset + 7] = ownershipBytes[3];
+
+            byte[] statefulBytes = System.BitConverter.GetBytes(statefulLength);
+            writer.Data[offset + 8] = statefulBytes[0];
+            writer.Data[offset + 9] = statefulBytes[1];
+            writer.Data[offset + 10] = statefulBytes[2];
+            writer.Data[offset + 11] = statefulBytes[3];
+
+            byte[] fieldsBytes = System.BitConverter.GetBytes(fieldsLength);
+            writer.Data[offset + 12] = fieldsBytes[0];
+            writer.Data[offset + 13] = fieldsBytes[1];
+            writer.Data[offset + 14] = fieldsBytes[2];
+            writer.Data[offset + 15] = fieldsBytes[3];
+        }
+
+        private void WriteStateful(NetDataWriter writer)
+        {
             // Object state serialization.
             foreach (var kvp in world.statefulObjects)
             {
@@ -116,10 +183,8 @@ namespace Davinet
             writeAllStates = false;
         }
 
-        public void WriteFields(NetDataWriter writer)
+        private void WriteFields(NetDataWriter writer)
         {
-            writer.Put((byte)PacketType.Fields);
-
             foreach (var kvp in world.statefulObjects)
             {
                 if (arbiter || kvp.Value.GetComponent<OwnableObject>().Owner == remoteID)
@@ -131,12 +196,10 @@ namespace Davinet
             writeAllFields = false;
         }
 
-        public void WriteSpawns(NetDataWriter writer)
+        private void WriteSpawns(NetDataWriter writer)
         {
             if (arbiter)
             {
-                writer.Put((byte)PacketType.Spawn);
-
                 foreach (var kvp in objectsToSpawn)
                 {
                     writer.Put(kvp.Key);
@@ -147,20 +210,27 @@ namespace Davinet
             objectsToSpawn.Clear();
         }
 
-        private void WriteOwnership(OwnableObject o)
+        private void WriteOwnership(NetDataWriter writer)
         {
-            if (SetOwnershipWriter.Length == 0)
-                SetOwnershipWriter.Put((byte)PacketType.SetOwnership);
+            foreach (StatefulObject stateful in ownershipTransfers)
+            {
+                writer.Put(stateful.ID);
+                writer.Put(stateful.Ownable.Owner);                
+            }
+        }
 
-            SetOwnershipWriter.Put(o.Owner);
-            SetOwnershipWriter.Put(o.GetComponent<StatefulObject>().ID);
+        private void SetOwnership(OwnableObject o)
+        {
+            ownershipTransfers.Add(o.GetComponent<StatefulObject>());
 
             IInputController inputController = world.statefulObjects[o.GetComponent<StatefulObject>().ID].GetComponent<IInputController>();
 
             if (inputController != null)
                 inputController.SetEnabled(o.Owner == remoteID);
         }
+        #endregion
 
+        #region Read
         private void Read(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
         {
             PacketType packetType = (PacketType)reader.GetByte();
@@ -170,29 +240,37 @@ namespace Davinet
                 case PacketType.State:
                     ReadState(reader);
                     break;
-                case PacketType.Fields:
-                    ReadFields(reader);
-                    break;
-                case PacketType.Spawn:
-                    ReadSpawns(reader);
-                    break;
                 case PacketType.Join:
                     ReadJoin(reader);
-                    break;
-                case PacketType.SetOwnership:
-                    ReadOwnership(reader);
                     break;
                 default:
                     break;
             }
         }
 
-        private void ReadOwnership(NetPacketReader reader)
+        private void ReadState(NetPacketReader reader)
         {
-            while (!reader.EndOfData)
-            {
-                int owner = reader.GetInt();
+            int frame = reader.GetInt();
+
+            int spawnsLength = reader.GetInt();
+            int ownershipLength = reader.GetInt();
+            int statefulsLength = reader.GetInt();
+            int fieldsLength = reader.GetInt();
+
+            ReadSpawns(reader, spawnsLength);
+            ReadOwnership(reader, ownershipLength);
+            ReadStateful(reader, statefulsLength);
+            ReadFields(reader, fieldsLength);
+        }
+
+        private void ReadOwnership(NetPacketReader reader, int length)
+        {
+            int startPosition = reader.Position;
+
+            while (reader.Position - startPosition < length)
+            {                
                 int id = reader.GetInt();
+                int owner = reader.GetInt();
 
                 world.SetOwnership(world.GetStatefulObject(id).Ownable, owner, true);
                 IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
@@ -202,42 +280,44 @@ namespace Davinet
             }
         }
 
-        private void ReadJoin(NetPacketReader reader)
-        {            
-            remoteID = reader.GetInt();
-            Debug.Log($"Local client assigned id {remoteID}");
-        }
-
-        private void ReadState(NetPacketReader reader)
+        private void ReadStateful(NetPacketReader reader, int length)
         {
             if (listenRemote)
+            {
+                reader.SkipBytes(length);
                 return;
+            }
 
-            int frame = reader.GetInt();
+            int startPosition = reader.Position;
 
-            while (!reader.EndOfData)
+            while (reader.Position - startPosition < length)
             {
                 int id = reader.GetInt();
-                
+
                 if (world.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
                     world.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                 else
-                    world.statefulObjects[id].GetComponent<IStateful>().Clear(reader);                
+                    world.statefulObjects[id].GetComponent<IStateful>().Clear(reader);
             }
         }
 
-        private void ReadFields(NetDataReader reader)
+        private void ReadFields(NetDataReader reader, int length)
         {
             if (listenRemote)
+            {
+                reader.SkipBytes(length);
                 return;
+            }
+
+            int startPosition = reader.Position;
 
             // Clear the first byte of the payload. This will be
             // a StatefulObject.DataType.Object enum.
             // TODO: Should not send the packet if no payload.
-            if (!reader.EndOfData)
+            if (reader.Position - startPosition < length)
                 reader.GetByte();
 
-            while (!reader.EndOfData)
+            while (reader.Position - startPosition < length)
             {
                 int id = reader.GetInt();
 
@@ -248,12 +328,17 @@ namespace Davinet
             }
         }
 
-        private void ReadSpawns(NetDataReader reader)
+        private void ReadSpawns(NetDataReader reader, int length)
         {
             if (listenRemote)
+            {
+                reader.SkipBytes(length);
                 return;
+            }
 
-            while (!reader.EndOfData)
+            int startPosition = reader.Position;
+
+            while (reader.Position - startPosition < length)
             {
                 // Instantiate, etc.
                 int id = reader.GetInt();
@@ -267,5 +352,6 @@ namespace Davinet
                 }
             }
         }
+        #endregion
     }
 }

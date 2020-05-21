@@ -128,40 +128,16 @@ namespace Davinet
 
             if (IsServer)
             {
-                server.WriteSpawns(serverWriter);
-                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
-                serverWriter.Reset();
-
                 server.WriteState(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
                 serverWriter.Reset();
-
-                server.WriteFields(serverWriter);
-                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
-                serverWriter.Reset();
-
-                if (server.SetOwnershipWriter.Length > 0)
-                {
-                    serverManager.SendToAll(server.SetOwnershipWriter, DeliveryMethod.ReliableOrdered);
-                    server.SetOwnershipWriter.Reset();
-                }
             }
 
             if (IsClient && !IsServer)
             {
-                client.WriteFields(clientWriter);
-                clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
-                clientWriter.Reset();
-
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
                 clientWriter.Reset();
-
-                if (client.SetOwnershipWriter.Length > 0)
-                {
-                    clientManager.SendToAll(client.SetOwnershipWriter, DeliveryMethod.ReliableOrdered);
-                    client.SetOwnershipWriter.Reset();
-                }
             }
         }
     }
