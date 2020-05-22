@@ -17,10 +17,16 @@ public class Menu : MonoBehaviour
     Toggle simulateLatency;
 
     [SerializeField]
+    Toggle simulateRTT;
+
+    [SerializeField]
     InputField latencyMin;
 
     [SerializeField]
     InputField latencyMax;
+
+    [SerializeField]
+    InputField rtt;
 
     [SerializeField]
     Slider packetLossPercent;
@@ -55,7 +61,9 @@ public class Menu : MonoBehaviour
             simulatePacketLoss = simulatePacketLoss.isOn,
             maxLatency = Convert.ToInt32(latencyMax.text),
             minLatency = Convert.ToInt32(latencyMin.text),
-            packetLossChance = Mathf.RoundToInt(packetLossPercent.value * 100)
+            packetLossChance = Mathf.RoundToInt(packetLossPercent.value * 100),
+            simulateRTT = simulateRTT.isOn,
+            RTT = Convert.ToInt32(rtt.text)
         };
 
         return debug;

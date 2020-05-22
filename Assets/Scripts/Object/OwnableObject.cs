@@ -5,31 +5,27 @@ namespace Davinet
     public class OwnableObject : MonoBehaviour
     {
         public int Owner { get; private set; }
-        public int OwnerFrame { get; private set; }
+        public int Authority { get; private set; }
 
-        private int previousOwner;
-
-        public void SetOwner(int owner, int frame)
+        public void SetOwner(int owner)
         {
-            previousOwner = Owner;
-
             Owner = owner;
-            OwnerFrame = frame;
+            Authority = owner;
         }
 
-        public bool HasOwnership(int owner, int currentFrame)
+        public void RelinquishOwnership()
         {
-            if (currentFrame == OwnerFrame)
-            {
-                if (previousOwner == owner)
-                    return true;
-            }
-            else if (Owner == owner)
-            {
-                return true;
-            }
+            Owner = 0;
+        }
 
-            return false;
+        public bool HasOwnership(int owner)
+        {
+            return owner == Owner;
+        }
+
+        public bool HasAuthority(int authority)
+        {
+            return authority == Authority;
         }
     }
 }

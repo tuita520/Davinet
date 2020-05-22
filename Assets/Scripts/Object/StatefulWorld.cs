@@ -68,7 +68,7 @@ namespace Davinet
 
         public void SetOwnership(OwnableObject o, int owner, bool silent=false)
         {
-            o.SetOwner(owner, Frame);
+            o.SetOwner(owner);
 
             if (!silent)
                 OnSetOwnership(o);
@@ -76,10 +76,15 @@ namespace Davinet
 
         public void RelinquishOwnership(OwnableObject o, bool silent=false)
         {
-            o.SetOwner(0, Frame);
+            o.RelinquishOwnership();
 
             if (!silent)
                 OnSetOwnership(o);
+        }
+
+        public void RelinquishAuthority(OwnableObject o)
+        {
+
         }
     }
 }

@@ -95,7 +95,12 @@ namespace Davinet
 
         private void StatefulWorld_OnSetOwnership(OwnableObject o)
         {
-            SetOwnership(o);
+            ownershipTransfers.Add(o.GetComponent<StatefulObject>());
+
+            IInputController inputController = world.statefulObjects[o.GetComponent<StatefulObject>().ID].GetComponent<IInputController>();
+
+            if (inputController != null)
+                inputController.SetEnabled(o.Owner == remoteID);
         }
 
         private void StatefulWorld_OnAdd(StatefulObject obj)
@@ -183,7 +188,7 @@ namespace Davinet
             // Object state serialization.
             foreach (var kvp in world.statefulObjects)
             {
-                if ((arbiter || kvp.Value.Ownable.HasOwnership(remoteID, world.Frame)) && (kvp.Value.GetComponent<IStateful>().ShouldWrite() || writeAllStates))
+                if (arbiter || kvp.Value.Ownable.HasAuthority(remoteID))
                 {
                     writer.Put(kvp.Key);
                     kvp.Value.GetComponent<IStateful>().Write(writer);
@@ -224,19 +229,11 @@ namespace Davinet
         {
             foreach (StatefulObject stateful in ownershipTransfers)
             {
+                // TODO: This could be written against an interface (IStateful does this).
                 writer.Put(stateful.ID);
-                writer.Put(stateful.Ownable.Owner);                
+                writer.Put(stateful.Ownable.Owner);
+                writer.Put(stateful.Ownable.Authority);
             }
-        }
-
-        private void SetOwnership(OwnableObject o)
-        {
-            ownershipTransfers.Add(o.GetComponent<StatefulObject>());
-
-            IInputController inputController = world.statefulObjects[o.GetComponent<StatefulObject>().ID].GetComponent<IInputController>();
-
-            if (inputController != null)
-                inputController.SetEnabled(o.Owner == remoteID);
         }
         #endregion
 
@@ -244,8 +241,6 @@ namespace Davinet
         private void Read(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
         {          
             PacketType packetType = (PacketType)reader.GetByte();
-
-            Debug.Log($"Reading {packetType} at {Time.time:F4}");
 
             switch (packetType)
             {
@@ -283,8 +278,10 @@ namespace Davinet
             {                
                 int id = reader.GetInt();
                 int owner = reader.GetInt();
+                int authority = reader.GetInt();
 
                 world.SetOwnership(world.GetStatefulObject(id).Ownable, owner, true);
+
                 IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
 
                 if (inputController != null)
@@ -306,7 +303,7 @@ namespace Davinet
             {
                 int id = reader.GetInt();
 
-                if (world.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
+                if (!world.GetStatefulObject(id).Ownable.HasAuthority(remoteID))
                     world.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                 else
                     world.statefulObjects[id].GetComponent<IStateful>().Pass(reader);

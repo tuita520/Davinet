@@ -11,6 +11,14 @@ public class StatefulRigidbody : MonoBehaviour, IStateful
         rb = GetComponent<Rigidbody>();
     }
 
+    private void FixedUpdate()
+    {
+        if (rb.IsSleeping())
+        {
+
+        }
+    }
+
     public void Read(NetDataReader reader)
     {
         rb.position = reader.GetVector3();

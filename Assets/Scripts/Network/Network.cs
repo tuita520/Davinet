@@ -68,6 +68,9 @@ namespace Davinet
 
             public bool simulatePacketLoss;
             public int packetLossChance;
+
+            public bool simulateRTT;
+            public int RTT;
         }
 
         public void StartServer(int port, NetworkDebug debug=null)
@@ -142,6 +145,7 @@ namespace Davinet
                 server.WriteState(serverWriter);
                 serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableUnordered);
 
+                #region Bandwidth Statistics
                 if (bytesPerFrame.Count > framesPerSecond)
                     bytesPerFrame.Dequeue();
 
@@ -152,6 +156,7 @@ namespace Davinet
                 {
                     BytesPerSecond += byteCount;
                 }
+                #endregion
 
                 serverWriter.Reset();
             }

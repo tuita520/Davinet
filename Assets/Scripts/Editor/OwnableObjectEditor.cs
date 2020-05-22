@@ -10,5 +10,6 @@ public class OwnableObjectEditor : Editor
     {
         OwnableObject ownable = (OwnableObject)serializedObject.targetObject;
         GUILayout.Label($"Owner: {ownable.Owner}");
+        GUILayout.Label($"Authority: {ownable.Authority}");
     }
 }
