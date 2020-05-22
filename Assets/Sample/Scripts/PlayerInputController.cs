@@ -8,6 +8,7 @@ public class PlayerInputController : MonoBehaviour, IInputController
     public PlayerInput CurrentInput { get; private set; }
 
     private bool hasFixedUpdateRun;
+    private bool poll;
 
     private void Awake()
     {
@@ -23,6 +24,9 @@ public class PlayerInputController : MonoBehaviour, IInputController
             CurrentInput.Clear();
             hasFixedUpdateRun = false;
         }
+
+        if (!poll)
+            return;
 
         CurrentInput.mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -55,6 +59,8 @@ public class PlayerInputController : MonoBehaviour, IInputController
 
         if (Input.GetMouseButtonDown(1))
             CurrentInput.usePowerDown = true;
+
+        CurrentInput.IsDirty = true;
     }
 
     private void FixedUpdate()
@@ -64,9 +70,9 @@ public class PlayerInputController : MonoBehaviour, IInputController
 
     public void SetEnabled(bool value)
     {
-        enabled = value;
+        poll = value;
 
-        if (enabled)
+        if (poll)
         {
             FindObjectOfType<SmoothFollowCamera>().target = transform;
             FindObjectOfType<SmoothFollowCamera>().enabled = true;

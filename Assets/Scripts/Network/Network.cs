@@ -1,5 +1,7 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Davinet
 {
@@ -40,6 +42,10 @@ namespace Davinet
 
             gameObject.AddComponent<BeforeFixedUpdate>().OnBeforeFixedUpdate += OnBeforeFrame;
             gameObject.AddComponent<AfterFixedUpdate>().OnAfterFixedUpdate += OnAfterFrame;
+
+            bytesPerFrame = new Queue<int>();
+
+            framesPerSecond = (int)(1 / Time.fixedDeltaTime);
         }
 
         // Transport layer network manager.
@@ -48,6 +54,11 @@ namespace Davinet
 
         private NetManager clientManager;
         private NetDataWriter clientWriter;
+
+        public int BytesPerSecond { get; private set; }
+
+        private Queue<int> bytesPerFrame;
+        private int framesPerSecond;
 
         public class NetworkDebug
         {
@@ -129,14 +140,26 @@ namespace Davinet
             if (IsServer)
             {
                 server.WriteState(serverWriter);
-                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableOrdered);
+                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableUnordered);
+
+                if (bytesPerFrame.Count > framesPerSecond)
+                    bytesPerFrame.Dequeue();
+
+                bytesPerFrame.Enqueue(serverWriter.Length);
+                BytesPerSecond = 0;
+
+                foreach (int byteCount in bytesPerFrame)
+                {
+                    BytesPerSecond += byteCount;
+                }
+
                 serverWriter.Reset();
             }
 
             if (IsClient && !IsServer)
             {
                 client.WriteState(clientWriter);
-                clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableOrdered);
+                clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableUnordered);
                 clientWriter.Reset();
             }
         }

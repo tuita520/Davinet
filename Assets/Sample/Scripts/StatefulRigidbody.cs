@@ -27,7 +27,7 @@ public class StatefulRigidbody : MonoBehaviour, IStateful
         writer.Put(rb.angularVelocity);
     }
 
-    public void Clear(NetDataReader reader)
+    public void Pass(NetDataReader reader)
     {
         reader.GetVector3();
         reader.GetQuaternion();
@@ -37,6 +37,6 @@ public class StatefulRigidbody : MonoBehaviour, IStateful
 
     public bool ShouldWrite()
     {
-        return !rb.IsSleeping();
+        return true;
     }
 }

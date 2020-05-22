@@ -374,7 +374,6 @@ GameObject:
   - component: {fileID: 9161741366647314633}
   - component: {fileID: 9161741366647314630}
   - component: {fileID: 9161741366647314635}
-  - component: {fileID: 9161741366647314638}
   - component: {fileID: 9161741366647314632}
   - component: {fileID: 9161741366647314636}
   - component: {fileID: -2298100474024439213}
@@ -385,6 +384,7 @@ GameObject:
   - component: {fileID: 9161741366647314637}
   - component: {fileID: 7703229816031880906}
   - component: {fileID: 236413673001119764}
+  - component: {fileID: 9161741366647314638}
   m_Layer: 0
   m_Name: PlayerBox
   m_TagString: Untagged
@@ -435,19 +435,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &9161741366647314638
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9161741366647314629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb3eec81cd0141e49ba75f37bf474386, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxSpeed: 5
 --- !u!114 &9161741366647314632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -584,3 +571,16 @@ MonoBehaviour:
   heightOffset: 2
   throwVelocity: 2
   grabSphere: {fileID: 3209886817810375642}
+--- !u!114 &9161741366647314638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9161741366647314629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb3eec81cd0141e49ba75f37bf474386, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxSpeed: 5

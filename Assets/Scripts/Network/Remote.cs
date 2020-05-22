@@ -5,6 +5,10 @@ using System.Collections.Generic;
 
 namespace Davinet
 {
+    /// <summary>
+    /// Remotes are responsible for serializing and deserializing changes between <see cref="StatefulWorld"/>s.
+    /// This is a controller class that does not maintain any data about the world itself.
+    /// </summary>
     public class Remote
     {
         public INetEventListener NetEventListener => eventBasedNetListener;
@@ -15,6 +19,12 @@ namespace Davinet
         /// There is only one arbiter per session. The arbiter by default has ownership over all objects.
         /// </summary>
         private bool arbiter;
+
+        /// <summary>
+        /// Listen remotes are clients that share their game instance (and stateful world) with the server.
+        /// To avoid certain state updates from being applied twice (like spawning), they ignore some updates
+        /// from the server.
+        /// </summary>
         private bool listenRemote;
 
         private int remoteID;
@@ -232,8 +242,10 @@ namespace Davinet
 
         #region Read
         private void Read(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
-        {
+        {          
             PacketType packetType = (PacketType)reader.GetByte();
+
+            Debug.Log($"Reading {packetType} at {Time.time:F4}");
 
             switch (packetType)
             {
@@ -297,7 +309,7 @@ namespace Davinet
                 if (world.statefulObjects[id].GetComponent<OwnableObject>().Owner != remoteID)
                     world.statefulObjects[id].GetComponent<IStateful>().Read(reader);
                 else
-                    world.statefulObjects[id].GetComponent<IStateful>().Clear(reader);
+                    world.statefulObjects[id].GetComponent<IStateful>().Pass(reader);
             }
         }
 

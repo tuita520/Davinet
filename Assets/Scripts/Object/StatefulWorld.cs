@@ -4,6 +4,10 @@ using System.Collections.Generic;
 namespace Davinet
 {
     // Can't spell Singleton without sin.
+    /// <summary>
+    /// All objects that are part of the game logic should be a part
+    /// of the stateful world.
+    /// </summary>
     public class StatefulWorld : SingletonBehaviour<StatefulWorld>
     {
         [SerializeField]

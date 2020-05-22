@@ -6,7 +6,8 @@ namespace Davinet
     {
         void Read(NetDataReader reader);
         void Write(NetDataWriter writer);
-        void Clear(NetDataReader reader);
+        void Pass(NetDataReader reader);
+
         bool ShouldWrite();
     }
 }
