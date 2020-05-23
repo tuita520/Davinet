@@ -8,9 +8,6 @@ namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
-        public bool IsServer => server != null;
-        public bool IsClient => client != null;
-
         public Remote Server
         {
             get
@@ -56,6 +53,9 @@ namespace Davinet
         private NetManager clientManager;
         private NetDataWriter clientWriter;
 
+        private bool isServer;
+        private bool isClient;
+
         #region Debug and Diagnostic Tools
         public int BytesPerSecond { get; private set; }
 
@@ -82,8 +82,14 @@ namespace Davinet
         {
             StatefulWorld.Instance.Initialize();
 
-            server = new Remote(StatefulWorld.Instance, true, false);
-            serverManager = new NetManager(server.NetEventListener);
+            EventBasedNetListener serverListener = new EventBasedNetListener();
+
+            server = new Remote(StatefulWorld.Instance, true, false, 0);
+            serverManager = new NetManager(serverListener);
+
+            serverListener.NetworkReceiveEvent += ServerListener_NetworkReceiveEvent;
+            serverListener.ConnectionRequestEvent += ConnectionRequestEvent;
+            serverListener.PeerConnectedEvent += ServerListener_PeerConnectedEvent;
 
             networkDebug = debug;
 
@@ -105,24 +111,31 @@ namespace Davinet
             serverManager.Start(port);
             serverWriter = new NetDataWriter();
 
+            isServer = true;
+
             enabled = true;
         }
 
         public void ConnectClient(string address, int port, NetworkDebug debug = null)
         {
-            if (!IsServer)
+            if (!isServer)
                 StatefulWorld.Instance.Initialize();
 
-            client = new Remote(StatefulWorld.Instance, false, IsServer);
-            clientManager = new NetManager(client.NetEventListener);
+            EventBasedNetListener clientListener = new EventBasedNetListener();
+            
+            clientManager = new NetManager(clientListener);
+            clientListener.NetworkReceiveEvent += ClientListener_NetworkReceiveEvent;
+            clientListener.ConnectionRequestEvent += ConnectionRequestEvent;
 
             networkDebug = debug;
 
             if (debug != null)
             {
+                /*
                 clientManager.SimulateLatency = debug.simulateLatency;
                 clientManager.SimulationMaxLatency = debug.maxLatency;
                 clientManager.SimulationMinLatency = debug.minLatency;
+                */
 
                 clientManager.SimulatePacketLoss = debug.simulatePacketLoss;
                 clientManager.SimulationPacketLossChance = debug.packetLossChance;
@@ -132,7 +145,68 @@ namespace Davinet
             clientManager.Connect(address, port, "DaviNet");
             clientWriter = new NetDataWriter();
 
+            isClient = true;
+
             enabled = true;
+        }
+
+        private void ServerListener_PeerConnectedEvent(NetPeer peer)
+        {
+            int id = server.AddPeer(peer);
+
+            NetDataWriter writer = new NetDataWriter();
+            writer.Put((byte)PacketType.Join);
+            writer.Put(id);
+            writer.Put(StatefulWorld.Instance.Frame);
+            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            writer.Reset();
+
+            server.SynchronizeAll();
+
+            var player = Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
+            StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
+            StatefulWorld.Instance.SetOwnership(player.GetComponent<OwnableObject>(), id);
+        }
+
+        private void ConnectionRequestEvent(ConnectionRequest request)
+        {
+            Debug.Log("Connection requested.");
+            request.Accept();
+        }
+
+        private void ServerListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
+        {
+            NetworkReceiveEvent(reader, server);
+        }
+
+        private void ClientListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
+        {
+            NetworkReceiveEvent(reader, client);
+        }
+
+        private void NetworkReceiveEvent(NetPacketReader reader, Remote remote)
+        {
+            PacketType packetType = (PacketType)reader.GetByte();
+
+            switch (packetType)
+            {
+                case PacketType.State:
+                    remote.ReadState(reader);
+                    break;
+                case PacketType.Join:
+                    int remoteID = reader.GetInt();
+                    int frame = reader.GetInt();
+
+                    if (!isServer)
+                        StatefulWorld.Instance.Frame = frame;
+
+                    client = new Remote(StatefulWorld.Instance, false, isServer, remoteID);
+
+                    Debug.Log($"Local client assigned id {remoteID}");
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void OnBeforeFrame()
@@ -142,10 +216,10 @@ namespace Davinet
 
             StatefulWorld.Instance.Frame++;
 
-            if (IsServer)
+            if (isServer)
                 serverManager.PollEvents();
 
-            if (IsClient)
+            if (isClient)
                 clientManager.PollEvents();
         }
 
@@ -154,7 +228,7 @@ namespace Davinet
             if (!enabled)
                 return;
 
-            if (IsServer)
+            if (isServer)
             {
                 server.WriteState(serverWriter);
 
@@ -185,7 +259,7 @@ namespace Davinet
                 }
             }
 
-            if (IsClient && !IsServer)
+            if (isClient && !isServer)
             {
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableUnordered);

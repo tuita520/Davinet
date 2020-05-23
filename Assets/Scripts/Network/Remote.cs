@@ -11,9 +11,9 @@ namespace Davinet
     /// </summary>
     public class Remote
     {
-        public INetEventListener NetEventListener => eventBasedNetListener;
+        // public INetEventListener NetEventListener => eventBasedNetListener;
 
-        private EventBasedNetListener eventBasedNetListener;
+        // private EventBasedNetListener eventBasedNetListener;
 
         /// <summary>
         /// There is only one arbiter per session. The arbiter by default has ownership over all objects.
@@ -33,19 +33,15 @@ namespace Davinet
 
         private bool writeAllFields;
 
-        public Remote(StatefulWorld world, bool arbiter, bool listenRemote)
+        public Remote(StatefulWorld world, bool arbiter, bool listenRemote, int remoteID)
         {
             this.arbiter = arbiter;
             this.listenRemote = listenRemote;
             this.world = world;
+            this.remoteID = remoteID;
 
             world.OnAdd += StatefulWorld_OnAdd;
             world.OnSetOwnership += StatefulWorld_OnSetOwnership;
-
-            eventBasedNetListener = new EventBasedNetListener();
-            eventBasedNetListener.NetworkReceiveEvent += Read;
-            eventBasedNetListener.ConnectionRequestEvent += EventBasedNetListener_ConnectionRequestEvent;
-            eventBasedNetListener.PeerConnectedEvent += EventBasedNetListener_PeerConnectedEvent;
 
             objectsToSpawn = new Dictionary<int, IdentifiableObject>();
             ownershipTransfers = new HashSet<StatefulObject>();
@@ -53,44 +49,24 @@ namespace Davinet
             peersByIndex = new Dictionary<int, NetPeer>();
         }
 
-        #region TODO: Move this out of here
-        private void EventBasedNetListener_PeerConnectedEvent(NetPeer peer)
+        public void SynchronizeAll()
         {
-            Debug.Log("Peer connected.");
-
-            if (arbiter)
+            foreach (var kvp in world.statefulObjects)
             {
-                int id = peersByIndex.Count + 1;
-                peersByIndex[id] = peer;
-
-                NetDataWriter writer = new NetDataWriter();
-                writer.Put((byte)PacketType.Join);
-                writer.Put(id);
-                writer.Put(world.Frame);
-                peer.Send(writer, DeliveryMethod.ReliableOrdered);
-                writer.Reset();
-
-                foreach (var kvp in world.statefulObjects)
-                {
-                    objectsToSpawn.Add(kvp.Key, kvp.Value.GetComponent<IdentifiableObject>());
-                    world.SetOwnership(kvp.Value.GetComponent<OwnableObject>(), kvp.Value.GetComponent<OwnableObject>().Owner);
-                }
-
-                var player = Object.Instantiate((world.registeredPrefabsMap[1717083505]));
-                world.Add(player.GetComponent<StatefulObject>());
-                world.SetOwnership(player.GetComponent<OwnableObject>(), id);
-
-
-                writeAllFields = true;
+                objectsToSpawn.Add(kvp.Key, kvp.Value.GetComponent<IdentifiableObject>());
+                world.SetOwnership(kvp.Value.GetComponent<OwnableObject>(), kvp.Value.GetComponent<OwnableObject>().Owner);
             }
+
+            writeAllFields = true;
         }
 
-        private void EventBasedNetListener_ConnectionRequestEvent(ConnectionRequest request)
+        public int AddPeer(NetPeer peer)
         {
-            Debug.Log("Connection requested.");
-            request.Accept();
+            int id = peersByIndex.Count + 1;
+            peersByIndex[id] = peer;
+
+            return id;
         }
-        #endregion
 
         private void StatefulWorld_OnSetOwnership(OwnableObject o)
         {
@@ -109,17 +85,6 @@ namespace Davinet
                 IdentifiableObject o = obj.GetComponent<IdentifiableObject>();
                 objectsToSpawn.Add(obj.ID, o);
             }
-        }
-
-        private void ReadJoin(NetPacketReader reader)
-        {
-            remoteID = reader.GetInt();
-            int frame = reader.GetInt();
-
-            if (!listenRemote)
-                world.Frame = frame;
-
-            Debug.Log($"Local client assigned id {remoteID}");
         }
 
         #region Write
@@ -235,24 +200,7 @@ namespace Davinet
         #endregion
 
         #region Read
-        private void Read(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
-        {          
-            PacketType packetType = (PacketType)reader.GetByte();
-
-            switch (packetType)
-            {
-                case PacketType.State:
-                    ReadState(reader);
-                    break;
-                case PacketType.Join:
-                    ReadJoin(reader);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private void ReadState(NetPacketReader reader)
+        public void ReadState(NetPacketReader reader)
         {
             int frame = reader.GetInt();
 
