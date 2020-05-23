@@ -81,10 +81,5 @@ namespace Davinet
             if (!silent)
                 OnSetOwnership(o);
         }
-
-        public void RelinquishAuthority(OwnableObject o)
-        {
-
-        }
     }
 }

@@ -93,7 +93,7 @@ public class ThrowPower : MonoBehaviour
             {
                 StatefulObject stateful = hit.collider.GetComponentInParent<StatefulObject>();
 
-                if (stateful != null && stateful != GetComponent<StatefulObject>())
+                if (stateful != null && stateful != GetComponent<StatefulObject>() && stateful.Ownable.CanClaim(GetComponent<OwnableObject>().Owner)) 
                     heldObject.Value = stateful;
             }
         }

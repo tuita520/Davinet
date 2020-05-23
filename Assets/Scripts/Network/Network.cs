@@ -1,5 +1,6 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -55,6 +56,7 @@ namespace Davinet
         private NetManager clientManager;
         private NetDataWriter clientWriter;
 
+        #region Debug and Diagnostic Tools
         public int BytesPerSecond { get; private set; }
 
         private Queue<int> bytesPerFrame;
@@ -73,6 +75,9 @@ namespace Davinet
             public int RTT;
         }
 
+        private NetworkDebug networkDebug;
+        #endregion
+
         public void StartServer(int port, NetworkDebug debug=null)
         {
             StatefulWorld.Instance.Initialize();
@@ -80,11 +85,18 @@ namespace Davinet
             server = new Remote(StatefulWorld.Instance, true, false);
             serverManager = new NetManager(server.NetEventListener);
 
-            if (debug != null)
+            networkDebug = debug;
+
+            if (networkDebug != null)
             {
+                // When LiteNetLib's latency simulator is enabled, packets being latent
+                // will block the sending of other packets. We use our own to simulate
+                // the delay that occurs while sending over distances (non-LAN).
+                /*
                 serverManager.SimulateLatency = debug.simulateLatency;
                 serverManager.SimulationMaxLatency = debug.maxLatency;
                 serverManager.SimulationMinLatency = debug.minLatency;
+                */
 
                 serverManager.SimulatePacketLoss = debug.simulatePacketLoss;
                 serverManager.SimulationPacketLossChance = debug.packetLossChance;
@@ -103,6 +115,8 @@ namespace Davinet
 
             client = new Remote(StatefulWorld.Instance, false, IsServer);
             clientManager = new NetManager(client.NetEventListener);
+
+            networkDebug = debug;
 
             if (debug != null)
             {
@@ -143,7 +157,6 @@ namespace Davinet
             if (IsServer)
             {
                 server.WriteState(serverWriter);
-                serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableUnordered);
 
                 #region Bandwidth Statistics
                 if (bytesPerFrame.Count > framesPerSecond)
@@ -158,7 +171,18 @@ namespace Davinet
                 }
                 #endregion
 
-                serverWriter.Reset();
+                if (networkDebug != null && networkDebug.simulateLatency)
+                {
+                    StartCoroutine(SendStateDelayed(serverWriter, serverManager));
+
+                    // TODO: This should probably be pooled when simulating latency.
+                    serverWriter = new NetDataWriter();
+                }
+                else
+                {                    
+                    serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableUnordered);
+                    serverWriter.Reset();
+                }
             }
 
             if (IsClient && !IsServer)
@@ -167,6 +191,15 @@ namespace Davinet
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableUnordered);
                 clientWriter.Reset();
             }
+        }
+
+        private IEnumerator SendStateDelayed(NetDataWriter writer, NetManager manager)
+        {
+            int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
+
+            yield return new WaitForSeconds(delayMilliseconds / (float)1000);
+
+            manager.SendToAll(writer, DeliveryMethod.ReliableUnordered);
         }
     }
 }

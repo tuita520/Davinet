@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class PlayerInputController : MonoBehaviour, IInputController
 {
@@ -7,7 +8,6 @@ public class PlayerInputController : MonoBehaviour, IInputController
 
     public PlayerInput CurrentInput { get; private set; }
 
-    private bool hasFixedUpdateRun;
     private bool poll;
 
     private void Awake()
@@ -17,14 +17,13 @@ public class PlayerInputController : MonoBehaviour, IInputController
         CurrentInput.Clear();
     }
 
+    private void OnEnable()
+    {
+        StartCoroutine(ClearInput());
+    }
+
     private void Update()
     {
-        if (hasFixedUpdateRun)
-        {
-            CurrentInput.Clear();
-            hasFixedUpdateRun = false;
-        }
-
         if (!poll)
             return;
 
@@ -63,9 +62,14 @@ public class PlayerInputController : MonoBehaviour, IInputController
         CurrentInput.IsDirty = true;
     }
 
-    private void FixedUpdate()
+    private IEnumerator ClearInput()
     {
-        hasFixedUpdateRun = true;
+        while (true)
+        {
+            yield return new WaitForFixedUpdate();
+
+            CurrentInput.Clear();
+        }
     }
 
     public void SetEnabled(bool value)

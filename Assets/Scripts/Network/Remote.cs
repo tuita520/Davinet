@@ -31,7 +31,6 @@ namespace Davinet
         private Dictionary<int, NetPeer> peersByIndex;
         private StatefulWorld world;
 
-        private bool writeAllStates;
         private bool writeAllFields;
 
         public Remote(StatefulWorld world, bool arbiter, bool listenRemote)
@@ -81,7 +80,7 @@ namespace Davinet
                 world.Add(player.GetComponent<StatefulObject>());
                 world.SetOwnership(player.GetComponent<OwnableObject>(), id);
 
-                writeAllStates = true;
+
                 writeAllFields = true;
             }
         }
@@ -191,11 +190,9 @@ namespace Davinet
                 if (arbiter || kvp.Value.Ownable.HasAuthority(remoteID))
                 {
                     writer.Put(kvp.Key);
-                    kvp.Value.GetComponent<IStateful>().Write(writer);
+                    kvp.Value.GetComponent<IStreamable>().Write(writer);
                 }
             }
-
-            writeAllStates = false;
         }
 
         private void WriteFields(NetDataWriter writer)
@@ -304,9 +301,9 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 if (!world.GetStatefulObject(id).Ownable.HasAuthority(remoteID))
-                    world.statefulObjects[id].GetComponent<IStateful>().Read(reader);
+                    world.statefulObjects[id].GetComponent<IStreamable>().Read(reader);
                 else
-                    world.statefulObjects[id].GetComponent<IStateful>().Pass(reader);
+                    world.statefulObjects[id].GetComponent<IStreamable>().Pass(reader);
             }
         }
 

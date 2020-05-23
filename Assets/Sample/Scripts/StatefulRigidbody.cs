@@ -2,7 +2,7 @@
 using LiteNetLib.Utils;
 using UnityEngine;
 
-public class StatefulRigidbody : MonoBehaviour, IStateful
+public class StatefulRigidbody : MonoBehaviour, IStreamable
 {
     private Rigidbody rb;
 

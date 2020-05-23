@@ -1,10 +1,7 @@
-﻿using LiteNetLib.Utils;
+﻿using Davinet;
 
-public interface IStateField
+public interface IStateField : IStreamable
 {
-    void Write(NetDataWriter writer);
-    void Read(NetDataReader reader);
-    void Pass(NetDataReader reader);
-
     bool IsDirty { get; set; }
 }
+
