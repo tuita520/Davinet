@@ -11,10 +11,6 @@ namespace Davinet
     /// </summary>
     public class Remote
     {
-        // public INetEventListener NetEventListener => eventBasedNetListener;
-
-        // private EventBasedNetListener eventBasedNetListener;
-
         /// <summary>
         /// There is only one arbiter per session. The arbiter by default has ownership over all objects.
         /// </summary>

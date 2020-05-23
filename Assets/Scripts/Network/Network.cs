@@ -86,6 +86,7 @@ namespace Davinet
 
             server = new Remote(StatefulWorld.Instance, true, false, 0);
             serverManager = new NetManager(serverListener);
+            serverManager.AutoRecycle = false;
 
             serverListener.NetworkReceiveEvent += ServerListener_NetworkReceiveEvent;
             serverListener.ConnectionRequestEvent += ConnectionRequestEvent;
@@ -124,8 +125,10 @@ namespace Davinet
             EventBasedNetListener clientListener = new EventBasedNetListener();
             
             clientManager = new NetManager(clientListener);
+            clientManager.AutoRecycle = false;
+
             clientListener.NetworkReceiveEvent += ClientListener_NetworkReceiveEvent;
-            clientListener.ConnectionRequestEvent += ConnectionRequestEvent;
+            clientListener.ConnectionRequestEvent += ConnectionRequestEvent;            
 
             networkDebug = debug;
 
@@ -191,7 +194,14 @@ namespace Davinet
             switch (packetType)
             {
                 case PacketType.State:
-                    remote.ReadState(reader);
+                    if (networkDebug != null && networkDebug.simulateLatency)
+                    {
+                        StartCoroutine(ReadStateDelayed(reader, remote));
+                    }
+                    else
+                    {
+                        remote.ReadState(reader);
+                    }
                     break;
                 case PacketType.Join:
                     int remoteID = reader.GetInt();
@@ -274,6 +284,15 @@ namespace Davinet
             yield return new WaitForSeconds(delayMilliseconds / (float)1000);
 
             manager.SendToAll(writer, DeliveryMethod.ReliableUnordered);
+        }
+
+        private IEnumerator ReadStateDelayed(NetPacketReader reader, Remote remote)
+        {
+            int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
+
+            yield return new WaitForSeconds(delayMilliseconds / (float)1000);
+
+            remote.ReadState(reader);
         }
     }
 }
