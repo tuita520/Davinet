@@ -8,6 +8,9 @@ namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
+        [SerializeField]
+        bool useJitterBuffer;
+
         public Remote Server
         {
             get
@@ -200,7 +203,14 @@ namespace Davinet
                     }
                     else
                     {
-                        remote.ReadState(reader);
+                        if (useJitterBuffer)
+                        {
+                        }
+                        else
+                        {
+                            int f = reader.GetInt();
+                            remote.ReadState(reader, f);
+                        }
                     }
                     break;
                 case PacketType.Join:
@@ -280,19 +290,16 @@ namespace Davinet
         private IEnumerator SendStateDelayed(NetDataWriter writer, NetManager manager)
         {
             int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
-
             yield return new WaitForSeconds(delayMilliseconds / (float)1000);
-
             manager.SendToAll(writer, DeliveryMethod.ReliableUnordered);
         }
 
         private IEnumerator ReadStateDelayed(NetPacketReader reader, Remote remote)
         {
             int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
-
             yield return new WaitForSeconds(delayMilliseconds / (float)1000);
-
-            remote.ReadState(reader);
+            int frame = reader.GetInt();
+            remote.ReadState(reader, frame);
         }
     }
 }
