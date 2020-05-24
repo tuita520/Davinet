@@ -11,6 +11,9 @@ namespace Davinet
         [SerializeField]
         bool useJitterBuffer;
 
+        [SerializeField]
+        int jitterBufferDelayFrames;
+
         public Remote Server
         {
             get
@@ -56,6 +59,8 @@ namespace Davinet
         private NetManager clientManager;
         private NetDataWriter clientWriter;
 
+        private JitterBuffer clientBuffer;
+
         private bool isServer;
         private bool isClient;
 
@@ -73,9 +78,6 @@ namespace Davinet
 
             public bool simulatePacketLoss;
             public int packetLossChance;
-
-            public bool simulateRTT;
-            public int RTT;
         }
 
         private NetworkDebug networkDebug;
@@ -151,6 +153,8 @@ namespace Davinet
             clientManager.Connect(address, port, "DaviNet");
             clientWriter = new NetDataWriter();
 
+            clientBuffer = new JitterBuffer(jitterBufferDelayFrames);
+
             isClient = true;
 
             enabled = true;
@@ -182,15 +186,23 @@ namespace Davinet
 
         private void ServerListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
         {
-            NetworkReceiveEvent(reader, server);
+            PacketType packetType = (PacketType)reader.GetByte();
+
+            if (packetType == PacketType.State)
+            {
+                if (networkDebug != null && networkDebug.simulateLatency)
+                {
+                    StartCoroutine(ReadStateDelayed(reader, server));
+                }
+                else
+                {
+                    int f = reader.GetInt();
+                    server.ReadState(reader);
+                }
+            }
         }
 
         private void ClientListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
-        {
-            NetworkReceiveEvent(reader, client);
-        }
-
-        private void NetworkReceiveEvent(NetPacketReader reader, Remote remote)
         {
             PacketType packetType = (PacketType)reader.GetByte();
 
@@ -199,27 +211,26 @@ namespace Davinet
                 case PacketType.State:
                     if (networkDebug != null && networkDebug.simulateLatency)
                     {
-                        StartCoroutine(ReadStateDelayed(reader, remote));
+                        StartCoroutine(ReadStateDelayed(reader, client));
                     }
                     else
                     {
-                        if (useJitterBuffer)
+                        if (useJitterBuffer && isClient)
                         {
+                            clientBuffer.Insert(reader, (int)(Time.fixedTime / Time.fixedDeltaTime));
                         }
                         else
                         {
                             int f = reader.GetInt();
-                            remote.ReadState(reader, f);
+                            client.ReadState(reader);
                         }
                     }
                     break;
                 case PacketType.Join:
                     int remoteID = reader.GetInt();
                     int frame = reader.GetInt();
-
-                    if (!isServer)
-                        StatefulWorld.Instance.Frame = frame;
-
+                    
+                    StatefulWorld.Instance.Frame = frame;
                     client = new Remote(StatefulWorld.Instance, false, isServer, remoteID);
 
                     Debug.Log($"Local client assigned id {remoteID}");
@@ -240,7 +251,18 @@ namespace Davinet
                 serverManager.PollEvents();
 
             if (isClient)
+            {
                 clientManager.PollEvents();
+
+                if (useJitterBuffer)
+                {
+                    JitterBuffer.StatePacket packet;
+                    if (clientBuffer.TryGetPacket(out packet, (int)(Time.fixedTime / Time.fixedDeltaTime)))
+                    {
+                        client.ReadState(packet.reader);
+                    }
+                }
+            }
         }
 
         private void OnAfterFrame()
@@ -279,7 +301,7 @@ namespace Davinet
                 }
             }
 
-            if (isClient && !isServer)
+            if (client != null && !isServer)
             {
                 client.WriteState(clientWriter);
                 clientManager.SendToAll(clientWriter, DeliveryMethod.ReliableUnordered);
@@ -287,6 +309,7 @@ namespace Davinet
             }
         }
 
+        // TODO: Both of these should be generalized to be able to use the jitter buffer.
         private IEnumerator SendStateDelayed(NetDataWriter writer, NetManager manager)
         {
             int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
@@ -299,7 +322,7 @@ namespace Davinet
             int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
             yield return new WaitForSeconds(delayMilliseconds / (float)1000);
             int frame = reader.GetInt();
-            remote.ReadState(reader, frame);
+            remote.ReadState(reader);
         }
     }
 }

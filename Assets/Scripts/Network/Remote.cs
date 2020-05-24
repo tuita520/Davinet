@@ -196,10 +196,8 @@ namespace Davinet
         #endregion
 
         #region Read
-        public void ReadState(NetPacketReader reader, int frame)
+        public void ReadState(NetPacketReader reader)
         {
-            world.Frame = frame;
-
             int spawnsLength = reader.GetInt();
             int ownershipLength = reader.GetInt();
             int statefulsLength = reader.GetInt();
