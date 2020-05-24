@@ -3633,7 +3633,7 @@ PrefabInstance:
     - target: {fileID: 8221979510549507898, guid: 69ecd2ca966088543970c880b75105c3,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8221979510549507901, guid: 69ecd2ca966088543970c880b75105c3,
         type: 3}
@@ -7691,7 +7691,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &696310536
 Transform:
   m_ObjectHideFlags: 0
@@ -12173,7 +12173,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useJitterBuffer: 1
-  jitterBufferDelayFrames: 100
+  jitterBufferDelayFrames: 4
 --- !u!4 &1040002766
 Transform:
   m_ObjectHideFlags: 0

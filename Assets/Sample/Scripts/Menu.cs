@@ -47,9 +47,9 @@ public class Menu : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private Davinet.Network.NetworkDebug NetworkDebug()
+    private Davinet.PeerDebug NetworkDebug()
     {
-        var debug = new Davinet.Network.NetworkDebug()
+        var debug = new Davinet.PeerDebug()
         {
             simulateLatency = simulateLatency.isOn,
             simulatePacketLoss = simulatePacketLoss.isOn,
