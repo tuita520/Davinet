@@ -56,9 +56,9 @@ namespace Davinet
             if (server == null)
                 StatefulWorld.Instance.Initialize();
 
-            PeerDebug debug = GetComponent<PeerDebug>();
+            PeerDebug debug = null;
 
-            if (debug == null && debugSettings != null)
+            if (debugSettings != null && server == null)
             {
                 debug = gameObject.AddComponent<PeerDebug>();
                 debug.Initialize(debugSettings);
