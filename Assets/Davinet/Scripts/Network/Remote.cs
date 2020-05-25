@@ -148,7 +148,7 @@ namespace Davinet
         {
             foreach (var kvp in world.statefulObjects)
             {
-                if (arbiter || kvp.Value.GetComponent<OwnableObject>().HasAuthority(remoteID))
+                if (arbiter || kvp.Value.Ownable.HasAuthority(remoteID))
                 {
                     kvp.Value.WriteStateFields(writer, kvp.Key, writeAll);
                 }
@@ -253,7 +253,7 @@ namespace Davinet
             {
                 int id = reader.GetInt();
 
-                if (world.statefulObjects[id].GetComponent<OwnableObject>().HasAuthority(remoteID))
+                if (!world.statefulObjects[id].Ownable.HasAuthority(remoteID))
                     world.statefulObjects[id].ReadStateFields(reader);
                 else
                     world.statefulObjects[id].ReadStateFields(reader, true);

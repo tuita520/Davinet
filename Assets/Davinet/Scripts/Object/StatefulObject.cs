@@ -33,7 +33,7 @@ namespace Davinet
             foreach (MonoBehaviour monoBehaviour in monoBehaviours)
             {
                 if (monoBehaviour is OwnableObject)
-                    return;
+                    continue;
 
                 List<PropertyInfo> propertyInfos = null;
 
