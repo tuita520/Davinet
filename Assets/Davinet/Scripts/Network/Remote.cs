@@ -203,7 +203,7 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 // If this remote is not the arbiter, the one sending the data must be.
-                world.GetStatefulObject(id).GetComponent<OwnableObject>().Read(reader, !arbiter);
+                world.GetStatefulObject(id).Ownable.Read(reader, arbiter);
 
                 IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
 
@@ -254,9 +254,9 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 if (!world.statefulObjects[id].Ownable.HasAuthority(remoteID))
-                    world.statefulObjects[id].ReadStateFields(reader);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter);
                 else
-                    world.statefulObjects[id].ReadStateFields(reader, true);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter, true);
             }
         }
 

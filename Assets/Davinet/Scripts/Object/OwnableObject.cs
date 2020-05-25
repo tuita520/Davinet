@@ -15,7 +15,7 @@ namespace Davinet
         public StateInt Owner { get; private set; }
         public StateInt Authority { get; private set; }
 
-        public int EffectiveAuthority { get; private set; }
+        public int LocalAuthority { get; private set; }
 
         private void Awake()
         {
@@ -45,20 +45,12 @@ namespace Davinet
                 Authority.Value = 0;
         }
 
-        public void AcknowledgeRelinquish()
-        {
-            if (Owner.Value == 0)
-            {
-                EffectiveAuthority = 0;
-            }
-        }
-
         public void TakeAuthority(int authority)
         {
             if (Owner.Value == 0 || Owner.Value == authority)
             {
                 Authority.Value = authority;
-                EffectiveAuthority = authority;
+                LocalAuthority = authority;
             }
         }
 
@@ -69,7 +61,7 @@ namespace Davinet
 
         public bool HasAuthority(int authority)
         {
-            return Authority.Value == authority || EffectiveAuthority == authority;
+            return Authority.Value == authority || (LocalAuthority != 0 && LocalAuthority == authority);
         }
 
         public bool HasOwnership(int owner)
@@ -80,50 +72,67 @@ namespace Davinet
         public enum DataType
         {
             Ownership,
-            Authority
+            Authority,
+            OwnershipAndAuthority
         };
 
         public void Write(NetDataWriter writer, int id, bool writeEvenIfNotDirty = false)
         {
-            if (Owner.IsDirty)
-            {
+            if (Owner.IsDirty || Authority.IsDirty)
                 writer.Put(id);
-                writer.Put((byte)DataType.Ownership);
-                writer.Put(Owner.Value);
+            else
+                return;
 
+            if (Owner.IsDirty && Authority.IsDirty)
+                writer.Put((byte)DataType.OwnershipAndAuthority);
+            else if (Owner.IsDirty)
+                writer.Put((byte)DataType.Ownership);
+            else if (Authority.IsDirty)
+                writer.Put((byte)DataType.Authority);
+
+            if (Owner.IsDirty)
+            {                
+                writer.Put(Owner.Value);
                 Owner.IsDirty = false;
             }
-            else if (Authority.IsDirty)
-            {
-                writer.Put(id);
-                writer.Put((byte)DataType.Authority);
-                writer.Put(Authority.Value);
 
+            if (Authority.IsDirty)
+            {
+                writer.Put(Authority.Value);
                 Authority.IsDirty = false;
             }
         }
 
-        public void Read(NetDataReader reader, bool sentFromArbiter)
+        public void Read(NetDataReader reader, bool arbiter)
         {
             DataType datatype = (DataType)reader.GetByte();
 
-            if (datatype == DataType.Authority)
-            {
-                int authority = reader.GetInt();
-                Authority.Value = authority;
+            bool containsOwnership = datatype == DataType.Ownership || datatype == DataType.OwnershipAndAuthority;
+            bool containsAuthority = datatype == DataType.Authority || datatype == DataType.OwnershipAndAuthority;
 
-                if (authority == 0 && sentFromArbiter)
-                    EffectiveAuthority = 0;
-
-                Authority.IsDirty = false;
-            }
-            else if (datatype == DataType.Ownership)
+            if (containsOwnership)
             {
                 int owner = reader.GetInt();
-                SetOwnership(owner);
+                Owner.Value = owner;
 
-                Owner.IsDirty = false;
-                Authority.IsDirty = false;
+                if (!arbiter)
+                    Owner.IsDirty = false;
+            }
+
+            if (containsAuthority)
+            {
+                int authority = reader.GetInt();
+
+                if (authority != 0 || Authority.Value == 0)
+                    Authority.Value = authority;                    
+
+                if (!arbiter)
+                {
+                    if (authority == 0)
+                        LocalAuthority = 0;
+
+                    Authority.IsDirty = false;
+                }
             }
         }
     }

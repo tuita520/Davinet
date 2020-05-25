@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using Davinet;
+using UnityEngine;
 
-public class ForceTrigger : MonoBehaviour
+public class ForcePower : MonoBehaviour
 {
     [SerializeField]
     float force = 10;
@@ -41,6 +42,9 @@ public class ForceTrigger : MonoBehaviour
         Rigidbody targetRb = other.GetComponentInParent<Rigidbody>();
 
         if (targetRb != null)
+        {
             targetRb.AddExplosionForce(force, rb.position, radius, upwardsModifier);
+            targetRb.GetComponent<StatefulObject>()?.Ownable.TakeAuthority(GetComponent<StatefulObject>().Ownable.Owner.Value);
+        }
     }
 }

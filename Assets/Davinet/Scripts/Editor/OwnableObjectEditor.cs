@@ -15,7 +15,7 @@ public class OwnableObjectEditor : Editor
             return;
 
         GUILayout.Label($"Owner: {ownable.Owner.Value}");
-        GUILayout.Label($"Local Authority: {ownable.Authority.Value}");
-        GUILayout.Label($"Unacknowledged Authority: {ownable.EffectiveAuthority}");
+        GUILayout.Label($"Authority: {ownable.Authority.Value}");
+        GUILayout.Label($"Local Authority: {ownable.LocalAuthority}");
     }
 }

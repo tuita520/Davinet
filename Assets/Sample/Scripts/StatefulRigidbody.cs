@@ -21,10 +21,24 @@ public class StatefulRigidbody : MonoBehaviour, IStreamable
 
     public void Read(NetDataReader reader)
     {
-        rb.position = reader.GetVector3();
-        rb.rotation = reader.GetQuaternion();
-        rb.velocity = reader.GetVector3();
-        rb.angularVelocity = reader.GetVector3();
+        Vector3 position = reader.GetVector3();
+        Quaternion rotation = reader.GetQuaternion();
+        Vector3 velocity = reader.GetVector3();
+        Vector3 angularVelocity = reader.GetVector3();
+
+        float epsilon = 0.0001f;
+
+        if (!rb.position.PerComponentIsEqual(position, epsilon))
+            rb.position = position;
+
+        if (!rb.rotation.PerComponentIsEqual(rotation, epsilon))
+            rb.rotation = rotation;
+
+        if (!rb.velocity.PerComponentIsEqual(velocity, epsilon))
+            rb.velocity = velocity;
+
+        if (!rb.angularVelocity.PerComponentIsEqual(angularVelocity, epsilon))
+            rb.angularVelocity = angularVelocity;
     }
 
     public void Write(NetDataWriter writer)
