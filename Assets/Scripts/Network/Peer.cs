@@ -1,5 +1,6 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using UnityEngine;
 
 namespace Davinet
 {
@@ -27,12 +28,13 @@ namespace Davinet
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
             listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;            
 
-            netManager = new NetManager(listener);            
+            netManager = new NetManager(listener);
+            netManager.AutoRecycle = false;
 
             if (debug != null)
             {
-                netManager.SimulatePacketLoss = debug.simulatePacketLoss;
-                netManager.SimulationPacketLossChance = debug.packetLossChance;
+                netManager.SimulatePacketLoss = debug.settings.simulatePacketLoss;
+                netManager.SimulationPacketLossChance = debug.settings.packetLossChance;
             }
 
             netDataWriter = new NetDataWriter();
@@ -54,18 +56,18 @@ namespace Davinet
 
             // TODO: This should be part of the gameplay logic layer, since none of it is network specific.
             // Instead, the gameplay layer should listen for when a player joins, and spawn an appropriate prefab.
-            var player = UnityEngine.Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
+            var player = Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
             StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
             StatefulWorld.Instance.SetOwnership(player.GetComponent<OwnableObject>(), id);
 
-            UnityEngine.Debug.Log($"Peer {peer.Id} connected.");
+            Debug.Log($"Peer {peer.Id} connected.");
         }
 
         private void Listener_ConnectionRequestEvent(ConnectionRequest request)
         {            
             request.Accept();
 
-            UnityEngine.Debug.Log($"Connection requested.");
+            Debug.Log($"Connection requested.");
         }
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
@@ -85,19 +87,20 @@ namespace Davinet
                 StatefulWorld.Instance.Frame = frame;
                 remote = new Remote(StatefulWorld.Instance, false, role == Role.ListenClient, remoteID);
 
-                UnityEngine.Debug.Log($"Client assigned id {remoteID}");
+                Debug.Log($"Client assigned id {remoteID}");
             }
         }
 
         private void ReadState(NetPacketReader reader)
         {
-            if (debug != null && debug.simulateLatency)
-            {
+            int frame = reader.GetInt();
 
+            if (debug != null && debug.settings.simulateLatency)
+            {
+                debug.InsertDelayedReader(Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, reader);
             }
             else
             {
-                int frame = reader.GetInt();
                 remote.ReadState(reader);
             }
         }
@@ -129,6 +132,14 @@ namespace Davinet
         public void PollEvents()
         {
             netManager.PollEvents();
+
+            if (debug != null && debug.settings.simulateLatency)
+            {
+                foreach (NetPacketReader reader in debug.GetAllReadyReaders())
+                {
+                    remote.ReadState(reader);
+                }
+            }
         }
 
         public void SendState()
@@ -136,8 +147,18 @@ namespace Davinet
             if (remote != null && role != Role.ListenClient)
             {
                 remote.WriteState(netDataWriter);
-                netManager.SendToAll(netDataWriter, DeliveryMethod.ReliableUnordered);
-                netDataWriter.Reset();
+
+                if (debug != null && debug.settings.simulateLatency)
+                {
+                    debug.SendStateDelayed(netDataWriter, netManager);
+                    // TODO: This should probably be pooled when simulating latency.
+                    netDataWriter = new NetDataWriter();
+                }
+                else
+                {                    
+                    netManager.SendToAll(netDataWriter, DeliveryMethod.ReliableUnordered);
+                    netDataWriter.Reset();
+                }
             }
         }
     }

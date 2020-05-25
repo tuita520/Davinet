@@ -42,14 +42,14 @@ public class Menu : MonoBehaviour
     public void StartHost()
     {
         Davinet.Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
-        Davinet.Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text), NetworkDebug());
+        Davinet.Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text));
 
         Destroy(gameObject);
     }
 
-    private Davinet.PeerDebug NetworkDebug()
+    private Davinet.PeerDebug.Settings NetworkDebug()
     {
-        var debug = new Davinet.PeerDebug()
+        var debug = new Davinet.PeerDebug.Settings()
         {
             simulateLatency = simulateLatency.isOn,
             simulatePacketLoss = simulatePacketLoss.isOn,

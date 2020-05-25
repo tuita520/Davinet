@@ -35,18 +35,34 @@ namespace Davinet
         private Peer server;
         private Peer client;
 
-        public void StartServer(int port, PeerDebug debug = null)
+        public void StartServer(int port, PeerDebug.Settings debugSettings = null)
         {
             StatefulWorld.Instance.Initialize();
+
+            PeerDebug debug = null;
+
+            if (debugSettings != null)
+            {
+                debug = gameObject.AddComponent<PeerDebug>();
+                debug.Initialize(debugSettings);
+            }
 
             server = new Peer(debug);
             server.Listen(port);
         }
 
-        public void ConnectClient(string address, int port, PeerDebug debug = null)
+        public void ConnectClient(string address, int port, PeerDebug.Settings debugSettings = null)
         {
             if (server == null)
                 StatefulWorld.Instance.Initialize();
+
+            PeerDebug debug = GetComponent<PeerDebug>();
+
+            if (debug == null && debugSettings != null)
+            {
+                debug = gameObject.AddComponent<PeerDebug>();
+                debug.Initialize(debugSettings);
+            }
 
             client = new Peer(debug);
             client.Connect(address, port, server != null);
@@ -114,38 +130,7 @@ namespace Davinet
                     BytesPerSecond += byteCount;
                 }
                 #endregion
-                
-
-                if (networkDebug != null && networkDebug.simulateLatency)
-                {
-                    StartCoroutine(SendStateDelayed(serverWriter, serverManager));
-
-                    // TODO: This should probably be pooled when simulating latency.
-                    serverWriter = new NetDataWriter();
-                }
-                else
-                {                    
-                    serverManager.SendToAll(serverWriter, DeliveryMethod.ReliableUnordered);
-                    serverWriter.Reset();
-                }
-            }
             */
-        }
-
-        // TODO: Both of these should be generalized to be able to use the jitter buffer.
-        private IEnumerator SendStateDelayed(NetDataWriter writer, NetManager manager)
-        {
-            int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
-            yield return new WaitForSeconds(delayMilliseconds / (float)1000);
-            manager.SendToAll(writer, DeliveryMethod.ReliableUnordered);
-        }
-
-        private IEnumerator ReadStateDelayed(NetPacketReader reader, Remote remote)
-        {
-            int delayMilliseconds = Random.Range(networkDebug.minLatency, networkDebug.maxLatency);
-            yield return new WaitForSeconds(delayMilliseconds / (float)1000);
-            int frame = reader.GetInt();
-            remote.ReadState(reader);
         }
     }
 }
