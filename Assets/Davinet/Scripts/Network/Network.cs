@@ -1,7 +1,4 @@
-﻿using LiteNetLib;
-using LiteNetLib.Utils;
-using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Davinet
 {
@@ -17,20 +14,7 @@ namespace Davinet
         {
             gameObject.AddComponent<BeforeFixedUpdate>().OnBeforeFixedUpdate += OnBeforeFrame;
             gameObject.AddComponent<AfterFixedUpdate>().OnAfterFixedUpdate += OnAfterFrame;
-
-            // bytesPerFrame = new Queue<int>();
-
-            // framesPerSecond = (int)(1 / Time.fixedDeltaTime);
         }
-
-        #region Debug and Diagnostic Tools
-        // public int BytesPerSecond { get; private set; }
-
-        // private Queue<int> bytesPerFrame;
-        // private int framesPerSecond;
-
-        private PeerDebug networkDebug;
-        #endregion
 
         private Peer server;
         private Peer client;
@@ -102,35 +86,6 @@ namespace Davinet
 
             if (client != null)
                 client.SendState();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            /*
-                
-                #region Bandwidth Statistics
-                if (bytesPerFrame.Count > framesPerSecond)
-                    bytesPerFrame.Dequeue();
-
-                bytesPerFrame.Enqueue(serverWriter.Length);
-                BytesPerSecond = 0;
-
-                foreach (int byteCount in bytesPerFrame)
-                {
-                    BytesPerSecond += byteCount;
-                }
-                #endregion
-            */
         }
     }
 }
