@@ -44,13 +44,13 @@ public class ThrowPower : MonoBehaviour
         if (current != null)
         {
             current.GetComponent<Rigidbody>().isKinematic = true;
-            StatefulWorld.Instance.SetOwnership(current.Ownable, GetComponent<OwnableObject>().Owner);
+            current.Ownable.SetOwnership(GetComponent<OwnableObject>().Owner.Value);
         }
 
         if (previous != null)
         {
             previous.GetComponent<Rigidbody>().isKinematic = false;
-            StatefulWorld.Instance.RelinquishOwnership(previous.Ownable);
+            previous.Ownable.RelinquishOwnership();
         }
     }
 
@@ -93,7 +93,7 @@ public class ThrowPower : MonoBehaviour
             {
                 StatefulObject stateful = hit.collider.GetComponentInParent<StatefulObject>();
 
-                if (stateful != null && stateful != GetComponent<StatefulObject>() && stateful.Ownable.CanClaim(GetComponent<OwnableObject>().Owner)) 
+                if (stateful != null && stateful != GetComponent<StatefulObject>() && stateful.Ownable.CanTakeOwnership(GetComponent<OwnableObject>().Owner.Value)) 
                     heldObject.Value = stateful;
             }
         }

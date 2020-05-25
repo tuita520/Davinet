@@ -33,7 +33,7 @@ public abstract class StateField<T> : IStateField
 
         set
         {
-            OnChanged(value, this.value);
+            OnChanged?.Invoke(value, this.value);
 
             this.value = value;
             IsDirty = true;            

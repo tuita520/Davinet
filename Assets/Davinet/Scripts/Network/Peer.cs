@@ -1,6 +1,6 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace Davinet
 {
@@ -10,6 +10,13 @@ namespace Davinet
         private NetManager netManager;
         private NetDataWriter netDataWriter;
         private EventBasedNetListener listener;
+
+        /// <summary>
+        /// If this peer receives any state updates before it has correctly
+        /// initialized its remote, store them in a queue to apply them after
+        /// initialization.
+        /// </summary>
+        private Queue<NetPacketReader> queuedStatePackets;
 
         private enum Role { Inactive, Server, Client, ListenClient }
         private Role role;
@@ -38,6 +45,8 @@ namespace Davinet
             }
 
             netDataWriter = new NetDataWriter();
+
+            queuedStatePackets = new Queue<NetPacketReader>();
         }
 
         // TODO: Would be nice if server specific logic lived somewhere else.
@@ -56,18 +65,18 @@ namespace Davinet
 
             // TODO: This should be part of the gameplay logic layer, since none of it is network specific.
             // Instead, the gameplay layer should listen for when a player joins, and spawn an appropriate prefab.
-            var player = Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
+            var player = UnityEngine.Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
             StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
-            StatefulWorld.Instance.SetOwnership(player.GetComponent<OwnableObject>(), id);
+            player.GetComponent<OwnableObject>().SetOwnership(id);
 
-            Debug.Log($"Peer {peer.Id} connected.");
+            UnityEngine.Debug.Log($"Peer {peer.Id} connected.");
         }
 
         private void Listener_ConnectionRequestEvent(ConnectionRequest request)
         {            
             request.Accept();
 
-            Debug.Log($"Connection requested.");
+            UnityEngine.Debug.Log($"Connection requested.");
         }
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
@@ -76,7 +85,14 @@ namespace Davinet
 
             if (packetType == PacketType.State)
             {
-                ReadState(reader);
+                if (remote == null)
+                {
+                    queuedStatePackets.Enqueue(reader);
+                }
+                else
+                {
+                    ReadState(reader);
+                }
             }
             // TODO: This is also server only logic.
             else if (packetType == PacketType.Join)
@@ -87,7 +103,7 @@ namespace Davinet
                 StatefulWorld.Instance.Frame = frame;
                 remote = new Remote(StatefulWorld.Instance, false, role == Role.ListenClient, remoteID);
 
-                Debug.Log($"Client assigned id {remoteID}");
+                UnityEngine.Debug.Log($"Client assigned id {remoteID}");
             }
         }
 
@@ -97,7 +113,7 @@ namespace Davinet
 
             if (debug != null && debug.settings.simulateLatency)
             {
-                debug.InsertDelayedReader(Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, reader);
+                debug.InsertDelayedReader(UnityEngine.Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, reader);
             }
             else
             {
@@ -113,9 +129,9 @@ namespace Davinet
             listener.PeerConnectedEvent += Listener_PeerConnectedEvent;
             netManager.Start(port);
 
-            remote = new Remote(StatefulWorld.Instance, true, false, 0);
-
             role = Role.Server;
+
+            remote = new Remote(StatefulWorld.Instance, true, false, 0);            
         }
 
         public void Connect(string address, int port, bool listenClient=false)
@@ -126,11 +142,17 @@ namespace Davinet
             netManager.Start();
             netManager.Connect(address, port, "Davinet");
 
-            role = listenClient ? Role.ListenClient : Role.Client;
+            role = listenClient ? Role.ListenClient : Role.Client;            
         }
 
         public void PollEvents()
         {
+            while (remote != null && queuedStatePackets.Count > 0)
+            {
+                NetPacketReader reader = queuedStatePackets.Dequeue();
+                ReadState(reader);
+            }
+
             netManager.PollEvents();
 
             if (debug != null && debug.settings.simulateLatency)

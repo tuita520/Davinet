@@ -8,8 +8,12 @@ public class OwnableObjectEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        OwnableObject ownable = (OwnableObject)serializedObject.targetObject;
-        GUILayout.Label($"Owner: {ownable.Owner}");
-        GUILayout.Label($"Authority: {ownable.Authority}");
+        if (Application.isPlaying)
+        {
+            OwnableObject ownable = (OwnableObject)serializedObject.targetObject;
+            GUILayout.Label($"Owner: {ownable.Owner.Value}");
+            GUILayout.Label($"Local Authority: {ownable.Authority.Value}");
+            GUILayout.Label($"Unacknowledged Authority: {ownable.EffectiveAuthority}");
+        }
     }
 }

@@ -65,21 +65,5 @@ namespace Davinet
         {
             return statefulObjects[id];
         }
-
-        public void SetOwnership(OwnableObject o, int owner, bool silent=false)
-        {
-            o.SetOwner(owner);
-
-            if (!silent)
-                OnSetOwnership(o);
-        }
-
-        public void RelinquishOwnership(OwnableObject o, bool silent=false)
-        {
-            o.RelinquishOwnership();
-
-            if (!silent)
-                OnSetOwnership(o);
-        }
     }
 }

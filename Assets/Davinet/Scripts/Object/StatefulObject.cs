@@ -32,6 +32,9 @@ namespace Davinet
 
             foreach (MonoBehaviour monoBehaviour in monoBehaviours)
             {
+                if (monoBehaviour is OwnableObject)
+                    return;
+
                 List<PropertyInfo> propertyInfos = null;
 
                 Type type = monoBehaviour.GetType();
@@ -104,6 +107,7 @@ namespace Davinet
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
 
+            // TODO: This while should no longer be necessary?
             while (!reader.EndOfData)
             {
                 DataType datatype = (DataType)reader.GetByte();
