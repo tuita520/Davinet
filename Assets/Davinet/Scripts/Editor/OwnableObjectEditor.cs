@@ -16,7 +16,6 @@ public class OwnableObjectEditor : Editor
 
         GUILayout.Label($"Owner: {ownable.Owner.Value}");
         GUILayout.Label($"Authority: {ownable.Authority.Value}");
-        GUILayout.Label($"Local Authority: {ownable.LocalAuthority.Value}");
     }
 
     private void OnSceneGUI()
@@ -31,8 +30,7 @@ public class OwnableObjectEditor : Editor
         GUILayout.BeginArea(new Rect(pos2D, Vector2.one * 150));
         GUI.backgroundColor = new Color(1, 1, 1, 0.5f);
         GUILayout.Box($"Owner: { ownable.Owner.Value}\n" +
-            $"Authority: {ownable.Authority.Value}\n" +
-            $"Local Authority: { ownable.LocalAuthority.Value}");
+            $"Authority: {ownable.Authority.Value}");
         GUILayout.EndArea();
         Handles.EndGUI();        
     }

@@ -15,20 +15,12 @@ namespace Davinet
         public StateInt Owner { get; private set; }
         public StateInt Authority { get; private set; }
 
-        public StateInt LocalAuthority;
-
-        public enum AuthorityType { Global, Local }
-
-        private StatefulObject so;
+        public bool CanRelinquishAuthority { get; set; }
 
         private void Awake()
         {
             Authority = new StateInt();
             Owner = new StateInt();
-
-            LocalAuthority = new StateInt();
-
-            so = GetComponent<StatefulObject>();
         }
 
         public void SetOwnership(int owner)
@@ -49,6 +41,9 @@ namespace Davinet
 
         public void RelinquishAuthority()
         {
+            if (!CanRelinquishAuthority)
+                return;
+
             if (Owner.Value == 0 && Authority.Value != 0)
                 Authority.Value = 0;
         }
@@ -58,7 +53,6 @@ namespace Davinet
             if (Owner.Value == 0 || Owner.Value == authority)
             {
                 Authority.Value = authority;
-                LocalAuthority.Value = authority;
             }
         }
 
@@ -69,32 +63,12 @@ namespace Davinet
 
         public bool HasAuthority(int authority)
         {
-            AuthorityType type;
-            return HasAuthority(authority, out type);
-        }
-
-        public bool HasAuthority(int authority, out AuthorityType type)
-        {
-            type = 0;
-
-            if (Authority.Value == authority)
-            {
-                type = AuthorityType.Global;
-                return true;
-            }
-            else if (LocalAuthority.Value != 0 && LocalAuthority.Value == authority)
-            {
-                type = AuthorityType.Local;
-                return true;
-            }
-
-            
-            return false;
+            return Authority.Value == authority;
         }
 
         public bool HasOwnership(int owner)
         {
-            return owner == Owner.Value;
+            return Owner.Value == owner;
         }
 
         public enum DataType
@@ -104,27 +78,39 @@ namespace Davinet
             OwnershipAndAuthority
         };
 
-        public void Write(NetDataWriter writer, int id, bool writeEvenIfNotDirty = false)
+        public void Write(NetDataWriter writer, int id, bool arbiter, bool writeEvenIfNotDirty = false)
         {
-            if (Owner.IsDirty || Authority.IsDirty || writeEvenIfNotDirty)
+            bool writeOwner = false;
+
+            if (Owner.IsDirty || writeEvenIfNotDirty)
+                writeOwner = true;
+
+            bool writeAuthority = false;
+
+            // Only the arbiter needs to write relinquishes of authority (i.e., authority moving
+            // from a client to the server).
+            if (Authority.IsDirty && (Authority.Value != 0 || arbiter) || writeEvenIfNotDirty)
+                writeAuthority = true;
+
+            if (writeOwner || writeAuthority)
                 writer.Put(id);
             else
                 return;
 
-            if ((Owner.IsDirty && Authority.IsDirty) || writeEvenIfNotDirty)
+            if (writeOwner && writeAuthority)
                 writer.Put((byte)DataType.OwnershipAndAuthority);
-            else if (Owner.IsDirty)
+            else if (writeOwner)
                 writer.Put((byte)DataType.Ownership);
-            else if (Authority.IsDirty)
+            else if (writeAuthority)
                 writer.Put((byte)DataType.Authority);
 
-            if (Owner.IsDirty || writeEvenIfNotDirty)
+            if (writeOwner)
             {                
                 writer.Put(Owner.Value);
                 Owner.IsDirty = false;
             }
 
-            if (Authority.IsDirty || writeEvenIfNotDirty)
+            if (writeAuthority)
             {
                 writer.Put(Authority.Value);
                 Authority.IsDirty = false;
@@ -135,10 +121,10 @@ namespace Davinet
         {
             DataType datatype = (DataType)reader.GetByte();
 
-            bool containsOwnership = datatype == DataType.Ownership || datatype == DataType.OwnershipAndAuthority;
-            bool containsAuthority = datatype == DataType.Authority || datatype == DataType.OwnershipAndAuthority;
+            bool readOwnership = datatype == DataType.Ownership || datatype == DataType.OwnershipAndAuthority;
+            bool readAuthority = datatype == DataType.Authority || datatype == DataType.OwnershipAndAuthority;
 
-            if (containsOwnership)
+            if (readOwnership)
             {
                 int owner = reader.GetInt();
                 Owner.Value = owner;
@@ -147,20 +133,13 @@ namespace Davinet
                     Owner.IsDirty = false;
             }
 
-            if (containsAuthority)
+            if (readAuthority)
             {
-                int authority = reader.GetInt();
-
-                if (authority != 0 || Authority.Value == 0)
-                    Authority.Value = authority;                    
+                int authority = reader.GetInt();                
+                Authority.Value = authority;                    
 
                 if (!arbiter)
-                {
-                    if (authority == 0)
-                        LocalAuthority.Value = 0;
-
                     Authority.IsDirty = false;
-                }
             }
         }
     }

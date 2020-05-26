@@ -38,6 +38,14 @@ namespace Davinet
 
             world.OnAdd += StatefulWorld_OnAdd;
 
+            if (arbiter)
+            {
+                foreach (var kvp in world.statefulObjects)
+                {
+                    kvp.Value.Ownable.CanRelinquishAuthority = true;
+                }
+            }
+
             objectsToSpawn = new Dictionary<int, IdentifiableObject>();
             peersByIndex = new Dictionary<int, NetPeer>();
         }
@@ -70,6 +78,11 @@ namespace Davinet
             if (arbiter)
             {
                 IdentifiableObject o = obj.GetComponent<IdentifiableObject>();
+
+                // Only the arbiter is permitted to relinquish an object's authority;
+                // non-arbiter remotes will hang on to authority until they receive confirmation
+                // from the arbiter that the object has relinquished.
+                o.GetComponent<StatefulObject>().Ownable.CanRelinquishAuthority = true;
                 objectsToSpawn.Add(obj.ID, o);
             }
         }
@@ -181,7 +194,7 @@ namespace Davinet
         {
             foreach (var kvp in world.statefulObjects)
             {
-                kvp.Value.GetComponent<OwnableObject>().Write(writer, kvp.Key, writeAll);
+                kvp.Value.GetComponent<OwnableObject>().Write(writer, kvp.Key, arbiter, writeAll);
             }
         }
         #endregion
@@ -214,7 +227,7 @@ namespace Davinet
                 IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
 
                 if (inputController != null)
-                    inputController.SetEnabled(world.GetStatefulObject(id).GetComponent<OwnableObject>().HasOwnership(remoteID));
+                    inputController.SetEnabled(world.GetStatefulObject(id).Ownable.HasOwnership(remoteID));
             }
         }
 

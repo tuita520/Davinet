@@ -4,10 +4,7 @@ using UnityEngine;
 public class OwnershipVisualizer : MonoBehaviour
 {
     [SerializeField]
-    float globalAuthorityColorStrength = 0.5f;
-
-    [SerializeField]
-    float localAuthorityColorStrength = 0.5f;
+    float authorityColorStrength = 0.5f;
 
     private OwnableObject ownable;
     private Renderer thisRenderer;
@@ -26,7 +23,6 @@ public class OwnershipVisualizer : MonoBehaviour
         ownable = GetComponent<OwnableObject>();
         ownable.Owner.OnChanged += OnOwnableChanged;
         ownable.Authority.OnChanged += OnOwnableChanged;
-        ownable.LocalAuthority.OnChanged += OnOwnableChanged;
     }
 
     private void OnOwnableChanged(int arg1, int arg2)
@@ -42,8 +38,6 @@ public class OwnershipVisualizer : MonoBehaviour
 
         foreach (PlayerColor playerColor in playerColors)
         {
-            OwnableObject.AuthorityType type;
-
             if (playerColor.GetComponent<OwnableObject>().Owner.Value == 0)
                 continue;
 
@@ -53,13 +47,9 @@ public class OwnershipVisualizer : MonoBehaviour
                 isClaimed = true;
                 break;
             }
-            else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value, out type))
+            else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value))
             {
-                if (type == OwnableObject.AuthorityType.Global)
-                    thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, globalAuthorityColorStrength);
-                else
-                    thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, localAuthorityColorStrength);
-
+                thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, authorityColorStrength);
                 isClaimed = true;
                 break;
             }
