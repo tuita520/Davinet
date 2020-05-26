@@ -24,22 +24,12 @@ public class OwnershipVisualizer : MonoBehaviour
     private void Start()
     {
         ownable = GetComponent<OwnableObject>();
-        ownable.Owner.OnChanged += Owner_OnChanged;
-        ownable.Authority.OnChanged += Authority_OnChanged;
-        ownable.LocalAuthority.OnChanged += LocalAuthority_OnChanged;
+        ownable.Owner.OnChanged += OnOwnableChanged;
+        ownable.Authority.OnChanged += OnOwnableChanged;
+        ownable.LocalAuthority.OnChanged += OnOwnableChanged;
     }
 
-    private void LocalAuthority_OnChanged(int arg1, int arg2)
-    {
-        UpdateColor();
-    }
-
-    private void Authority_OnChanged(int arg1, int arg2)
-    {
-        UpdateColor();
-    }
-
-    private void Owner_OnChanged(int arg1, int arg2)
+    private void OnOwnableChanged(int arg1, int arg2)
     {
         UpdateColor();
     }
@@ -62,7 +52,7 @@ public class OwnershipVisualizer : MonoBehaviour
                 thisRenderer.material.color = playerColor.Col.Value;
                 isClaimed = true;
                 break;
-            }   
+            }
             else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value, out type))
             {
                 if (type == OwnableObject.AuthorityType.Global)
