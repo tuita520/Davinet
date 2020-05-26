@@ -73,13 +73,16 @@ public class PlayerInputController : MonoBehaviour, IInputController
     }
 
     public void SetEnabled(bool value)
-    {
-        poll = value;
-
-        if (poll)
+    {      
+        if (value)
         {
             FindObjectOfType<SmoothFollowCamera>().target = transform;
             FindObjectOfType<SmoothFollowCamera>().enabled = true;
+
+            // TODO: Player specific information should be managed elsewhere.
+            GetComponent<PlayerColor>().Col.Value = Color.HSVToRGB(Random.Range(0f, 1f), 1, 1);
         }
+
+        poll = value;
     }
 }

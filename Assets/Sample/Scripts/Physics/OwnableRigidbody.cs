@@ -12,7 +12,7 @@ public class OwnableRigidbody : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // TODO: This will get called every frame the rigidbody is asleep.
+        // TODO: This should only get called on the frame when the rigidbody is asleep, rather than every frame.
         if (rb.IsSleeping())
         {
             GetComponent<OwnableObject>().RelinquishAuthority();

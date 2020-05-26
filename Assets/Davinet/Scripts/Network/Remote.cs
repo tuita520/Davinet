@@ -42,6 +42,10 @@ namespace Davinet
             peersByIndex = new Dictionary<int, NetPeer>();
         }
 
+        /// <summary>
+        /// Writes all data about all objects (whether dirty or not) to the next state update.
+        /// Can be used to ensure the world is fully in sync when new peers join.
+        /// </summary>
         public void SynchronizeAll()
         {
             foreach (var kvp in world.statefulObjects)
@@ -80,8 +84,8 @@ namespace Davinet
 
             int offset = sizeof(byte) + sizeof(int);
 
-            // Reserve positions for the length of the data for
-            // spawns, ownership, statefuls, and fields (in order).
+            // Reserve positions for the length of the data for spawns, ownership, statefuls, 
+            // and fields (in order).
             writer.Put(0);
             writer.Put(0);
             writer.Put(0);
@@ -133,13 +137,17 @@ namespace Davinet
 
         private void WriteStateful(NetDataWriter writer)
         {
-            // Object state serialization.
             foreach (var kvp in world.statefulObjects)
             {
                 if (arbiter || kvp.Value.Ownable.HasAuthority(remoteID))
                 {
-                    writer.Put(kvp.Key);
-                    kvp.Value.GetComponent<IStreamable>().Write(writer);
+                    IStreamable streamable = kvp.Value.GetComponent<IStreamable>();
+
+                    if (streamable != null)
+                    {
+                        writer.Put(kvp.Key);
+                        streamable.Write(writer);
+                    }
                 }
             }
         }
@@ -174,8 +182,6 @@ namespace Davinet
             foreach (var kvp in world.statefulObjects)
             {
                 kvp.Value.GetComponent<OwnableObject>().Write(writer, kvp.Key, writeAll);
-
-                // Need to do input enabling stuff too, I suppose. Not the best place for it.
             }
         }
         #endregion

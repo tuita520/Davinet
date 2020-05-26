@@ -11,14 +11,6 @@ public class StatefulRigidbody : MonoBehaviour, IStreamable
         rb = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
-    {
-        if (rb.IsSleeping())
-        {
-
-        }
-    }
-
     public void Read(NetDataReader reader)
     {
         Vector3 position = reader.GetVector3();

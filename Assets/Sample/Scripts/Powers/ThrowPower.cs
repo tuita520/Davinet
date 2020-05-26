@@ -36,7 +36,8 @@ public class ThrowPower : MonoBehaviour
 
     private void OnDisable()
     {
-        grabSphere.SetActive(false);
+        if (grabSphere != null)
+            grabSphere.SetActive(false);
     }
 
     private void HeldObject_OnChanged(StatefulObject current, StatefulObject previous)

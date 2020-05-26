@@ -5964,7 +5964,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d66a9cc7dbebbc4ba4121ffe7da48ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  awakeMaterial: {fileID: 2100000, guid: f8f2e907061192544a60810eca6ce97e, type: 2}
+  globalAuthorityValue: 0.5
+  localAuthorityValue: 0.5
 --- !u!54 &609920319
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -10079,7 +10080,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d66a9cc7dbebbc4ba4121ffe7da48ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  awakeMaterial: {fileID: 2100000, guid: f8f2e907061192544a60810eca6ce97e, type: 2}
+  globalAuthorityValue: 0.5
+  localAuthorityValue: 0.5
 --- !u!54 &889562035
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -29855,7 +29857,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d66a9cc7dbebbc4ba4121ffe7da48ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  awakeMaterial: {fileID: 2100000, guid: f8f2e907061192544a60810eca6ce97e, type: 2}
+  globalAuthorityValue: 0.5
+  localAuthorityValue: 0.5
 --- !u!114 &4292524453667324876
 MonoBehaviour:
   m_ObjectHideFlags: 0

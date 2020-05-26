@@ -15,12 +15,16 @@ namespace Davinet
         public StateInt Owner { get; private set; }
         public StateInt Authority { get; private set; }
 
-        public int LocalAuthority { get; private set; }
+        public StateInt LocalAuthority;
+
+        public enum AuthorityType { Global, Local }
 
         private void Awake()
         {
             Authority = new StateInt();
             Owner = new StateInt();
+
+            LocalAuthority = new StateInt();
         }
 
         public void SetOwnership(int owner)
@@ -50,7 +54,7 @@ namespace Davinet
             if (Owner.Value == 0 || Owner.Value == authority)
             {
                 Authority.Value = authority;
-                LocalAuthority = authority;
+                LocalAuthority.Value = authority;
             }
         }
 
@@ -61,7 +65,25 @@ namespace Davinet
 
         public bool HasAuthority(int authority)
         {
-            return Authority.Value == authority || (LocalAuthority != 0 && LocalAuthority == authority);
+            AuthorityType type;
+            return HasAuthority(authority, out type);
+        }
+
+        public bool HasAuthority(int authority, out AuthorityType type)
+        {
+            if (Authority.Value == authority)
+            {
+                type = AuthorityType.Global;
+                return true;
+            }
+            else if (LocalAuthority.Value != 0 && LocalAuthority.Value == authority)
+            {
+                type = AuthorityType.Local;
+                return true;
+            }
+
+            type = 0;
+            return false;
         }
 
         public bool HasOwnership(int owner)
@@ -129,7 +151,7 @@ namespace Davinet
                 if (!arbiter)
                 {
                     if (authority == 0)
-                        LocalAuthority = 0;
+                        LocalAuthority.Value = 0;
 
                     Authority.IsDirty = false;
                 }

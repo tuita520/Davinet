@@ -36,5 +36,22 @@ namespace Davinet
                 reader.GetFloat(),
                 reader.GetFloat());
         }
+
+        public static void Put(this NetDataWriter writer, Color color)
+        {
+            writer.Put(color.r);
+            writer.Put(color.g);
+            writer.Put(color.b);
+            writer.Put(color.a);
+        }
+
+        public static Color GetColor(this NetDataReader reader)
+        {
+            return new Color(
+                reader.GetFloat(),
+                reader.GetFloat(),
+                reader.GetFloat(),
+                reader.GetFloat());
+        }
     }
 }
