@@ -70,7 +70,10 @@ public class PlayerInputController : MonoBehaviour, IInputController
     }
 
     public void SetEnabled(bool value)
-    {      
+    {
+        if (value == poll)
+            return;
+
         if (value)
         {
             FindObjectOfType<SmoothFollowCamera>().target = transform;
