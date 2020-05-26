@@ -59,7 +59,7 @@ namespace Davinet
             foreach (var kvp in world.statefulObjects)
             {
                 objectsToSpawn.Add(kvp.Key, kvp.Value.GetComponent<IdentifiableObject>());
-                kvp.Value.GetComponent<OwnableObject>().SetOwnership(kvp.Value.GetComponent<OwnableObject>().Owner.Value);
+                kvp.Value.GetComponent<OwnableObject>().GrantOwnership(kvp.Value.Ownable.Owner.Value);
             }
 
             writeAll = true;

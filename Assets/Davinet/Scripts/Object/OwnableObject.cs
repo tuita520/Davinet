@@ -1,4 +1,5 @@
 ﻿using LiteNetLib.Utils;
+using System.Security.AccessControl;
 using UnityEngine;
 
 namespace Davinet
@@ -15,12 +16,28 @@ namespace Davinet
         public StateInt Owner { get; set; }
         public StateInt Authority { get; set; }
 
+        private int authorityFrameChanged;
+        private int ownershipFrameChanged;
+
         public bool CanRelinquishAuthority { get; set; }
 
         private void Awake()
         {
             Authority = new StateInt();
             Owner = new StateInt();
+
+            Authority.OnChanged += Authority_OnChanged;
+            Owner.OnChanged += Owner_OnChanged;
+        }
+
+        private void Owner_OnChanged(int arg1, int arg2)
+        {
+            //ownershipFrameChanged = StatefulWorld.Instance.Frame;
+        }
+
+        private void Authority_OnChanged(int arg1, int arg2)
+        {
+            //authorityFrameChanged = StatefulWorld.Instance.Frame;
         }
 
         public void SetOwnership(int owner)
@@ -31,6 +48,15 @@ namespace Davinet
 
                 TakeAuthority(owner);                
             }
+        }
+
+        public void GrantOwnership(int owner)
+        {
+            Owner.Value = owner;
+            Authority.Value = owner;
+
+            ownershipFrameChanged = 1;
+            authorityFrameChanged = 1;
         }
 
         public void RelinquishOwnership()
@@ -97,6 +123,20 @@ namespace Davinet
             else
                 return;
 
+            int frame;
+
+            if (!arbiter)
+                frame = StatefulWorld.Instance.Frame;
+            else
+            {
+                if (writeAuthority)
+                    frame = authorityFrameChanged;
+                else
+                    frame = ownershipFrameChanged;
+            }
+
+            writer.Put(frame);
+
             if (writeOwner && writeAuthority)
                 writer.Put((byte)DataType.OwnershipAndAuthority);
             else if (writeOwner)
@@ -108,17 +148,20 @@ namespace Davinet
             {                
                 writer.Put(Owner.Value);
                 Owner.IsDirty = false;
+                ownershipFrameChanged = frame;
             }
 
             if (writeAuthority)
             {
                 writer.Put(Authority.Value);
                 Authority.IsDirty = false;
+                authorityFrameChanged = frame;
             }
         }
 
         public void Read(NetDataReader reader, bool arbiter)
         {
+            int frame = reader.GetInt();
             DataType datatype = (DataType)reader.GetByte();
 
             bool readOwnership = datatype == DataType.Ownership || datatype == DataType.OwnershipAndAuthority;
@@ -127,19 +170,29 @@ namespace Davinet
             if (readOwnership)
             {
                 int owner = reader.GetInt();
-                Owner.Value = owner;
 
-                if (!arbiter)
-                    Owner.IsDirty = false;
+                if (frame >= ownershipFrameChanged)
+                {
+                    Owner.Value = owner;
+                    ownershipFrameChanged = frame;
+
+                    if (!arbiter)
+                        Owner.IsDirty = false;
+                }
             }
 
             if (readAuthority)
             {
-                int authority = reader.GetInt();                
-                Authority.Value = authority;                    
+                int authority = reader.GetInt();
 
-                if (!arbiter)
-                    Authority.IsDirty = false;
+                if (frame >= authorityFrameChanged)
+                {                   
+                    Authority.Value = authority;
+                    authorityFrameChanged = frame;
+
+                    if (!arbiter)
+                        Authority.IsDirty = false;
+                }
             }
         }
     }

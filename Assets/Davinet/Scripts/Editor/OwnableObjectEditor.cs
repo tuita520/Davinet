@@ -1,4 +1,6 @@
 ﻿using Davinet;
+using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,9 +15,6 @@ public class OwnableObjectEditor : Editor
         // If the Owner property is null, then the object has not been initialized.
         if (ownable.Owner == null)
             return;
-
-        GUILayout.Label($"Owner: {ownable.Owner.Value}");
-        GUILayout.Label($"Authority: {ownable.Authority.Value}");
     }
 
     private void OnSceneGUI()
@@ -25,12 +24,19 @@ public class OwnableObjectEditor : Editor
         if (ownable.Owner == null)
             return;
 
+        Type type = typeof(OwnableObject);
+
+        int ownershipChangedFrame = (int)type.GetField("ownershipFrameChanged", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ownable);
+        int authorityChangedFrame = (int)type.GetField("authorityFrameChanged", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ownable);
+
         Handles.BeginGUI();
         Vector2 pos2D = HandleUtility.WorldToGUIPoint(ownable.transform.position);
         GUILayout.BeginArea(new Rect(pos2D, Vector2.one * 150));
         GUI.backgroundColor = new Color(1, 1, 1, 0.5f);
         GUILayout.Box($"Owner: { ownable.Owner.Value}\n" +
-            $"Authority: {ownable.Authority.Value}");
+            $"Authority: {ownable.Authority.Value}\n" +
+            $"Owner frame: {ownershipChangedFrame}\n" +
+            $"Authority frame: {authorityChangedFrame}");
         GUILayout.EndArea();
         Handles.EndGUI();        
     }

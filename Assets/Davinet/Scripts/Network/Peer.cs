@@ -72,7 +72,7 @@ namespace Davinet
             // Instead, the gameplay layer should listen for when a player joins, and spawn an appropriate prefab.
             var player = UnityEngine.Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
             StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
-            player.GetComponent<OwnableObject>().SetOwnership(id);
+            player.GetComponent<OwnableObject>().GrantOwnership(id);
 
             UnityEngine.Debug.Log($"Peer {peer.Id} connected.");
         }
@@ -134,7 +134,9 @@ namespace Davinet
 
             role = Role.Server;
 
-            remote = new Remote(StatefulWorld.Instance, true, false, 0);            
+            remote = new Remote(StatefulWorld.Instance, true, false, 0);
+
+            StatefulWorld.Instance.Frame = 0;
         }
 
         public void Connect(string address, int port, bool listenClient=false)

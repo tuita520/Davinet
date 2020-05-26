@@ -6,6 +6,8 @@ public class OwnableRigidbody : MonoBehaviour
     private Rigidbody rb;
     private OwnableObject ownable;
 
+    private bool isSleeping;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -14,10 +16,20 @@ public class OwnableRigidbody : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // TODO: This should only get called on the frame when the rigidbody is asleep, rather than every frame.
-        if (rb.IsSleeping())
+        if (!isSleeping)
         {
-            ownable.RelinquishAuthority();
+            if (rb.IsSleeping())
+            {
+                ownable.RelinquishAuthority();
+                isSleeping = true;
+            }
+        }
+        else
+        {
+            if (!rb.IsSleeping())
+            {
+                isSleeping = false;
+            }
         }
     }
 
