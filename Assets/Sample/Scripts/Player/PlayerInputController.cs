@@ -53,9 +53,6 @@ public class PlayerInputController : MonoBehaviour, IInputController
         if (Input.GetKeyDown(KeyCode.Alpha2))
             CurrentInput.setPowerDown = 1;
 
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-            CurrentInput.setPowerDown = 2;
-
         if (Input.GetMouseButtonDown(1))
             CurrentInput.usePowerDown = true;
 

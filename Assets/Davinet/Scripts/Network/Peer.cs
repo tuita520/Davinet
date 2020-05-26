@@ -4,6 +4,11 @@ using System.Collections.Generic;
 
 namespace Davinet
 {
+    /// <summary>
+    /// Represents either a client or server in the network. Sends and receives messages
+    /// with other connected peers. Sends state updates and applies received state updates 
+    /// for its <see cref="Remote"/>.
+    /// </summary>
     public class Peer
     {
         private Remote remote;

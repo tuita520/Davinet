@@ -251,7 +251,6 @@ namespace Davinet
 
             // Clear the first byte of the payload. This will be
             // a StatefulObject.DataType.Object enum.
-            // TODO: Should not send the packet if no payload.
             if (reader.Position - startPosition < length)
                 reader.GetByte();
 

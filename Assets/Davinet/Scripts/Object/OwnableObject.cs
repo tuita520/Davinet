@@ -19,12 +19,16 @@ namespace Davinet
 
         public enum AuthorityType { Global, Local }
 
+        private StatefulObject so;
+
         private void Awake()
         {
             Authority = new StateInt();
             Owner = new StateInt();
 
             LocalAuthority = new StateInt();
+
+            so = GetComponent<StatefulObject>();
         }
 
         public void SetOwnership(int owner)
@@ -100,25 +104,25 @@ namespace Davinet
 
         public void Write(NetDataWriter writer, int id, bool writeEvenIfNotDirty = false)
         {
-            if (Owner.IsDirty || Authority.IsDirty)
+            if (Owner.IsDirty || Authority.IsDirty || writeEvenIfNotDirty)
                 writer.Put(id);
             else
                 return;
 
-            if (Owner.IsDirty && Authority.IsDirty)
+            if ((Owner.IsDirty && Authority.IsDirty) || writeEvenIfNotDirty)
                 writer.Put((byte)DataType.OwnershipAndAuthority);
             else if (Owner.IsDirty)
                 writer.Put((byte)DataType.Ownership);
             else if (Authority.IsDirty)
                 writer.Put((byte)DataType.Authority);
 
-            if (Owner.IsDirty)
+            if (Owner.IsDirty || writeEvenIfNotDirty)
             {                
                 writer.Put(Owner.Value);
                 Owner.IsDirty = false;
             }
 
-            if (Authority.IsDirty)
+            if (Authority.IsDirty || writeEvenIfNotDirty)
             {
                 writer.Put(Authority.Value);
                 Authority.IsDirty = false;

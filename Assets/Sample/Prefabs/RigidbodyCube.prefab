@@ -128,8 +128,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d66a9cc7dbebbc4ba4121ffe7da48ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  globalAuthorityValue: 0.65
-  localAuthorityValue: 0.35
+  globalAuthorityColorStrength: 0.5
+  localAuthorityColorStrength: 0.25
 --- !u!114 &-9172811026523592639
 MonoBehaviour:
   m_ObjectHideFlags: 0

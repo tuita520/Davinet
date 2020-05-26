@@ -18,4 +18,22 @@ public class OwnableObjectEditor : Editor
         GUILayout.Label($"Authority: {ownable.Authority.Value}");
         GUILayout.Label($"Local Authority: {ownable.LocalAuthority.Value}");
     }
+
+    private void OnSceneGUI()
+    {
+        OwnableObject ownable = (OwnableObject)target;
+
+        if (ownable.Owner == null)
+            return;
+
+        Handles.BeginGUI();
+        Vector2 pos2D = HandleUtility.WorldToGUIPoint(ownable.transform.position);
+        GUILayout.BeginArea(new Rect(pos2D, Vector2.one * 150));
+        GUI.backgroundColor = new Color(1, 1, 1, 0.5f);
+        GUILayout.Box($"Owner: { ownable.Owner.Value}\n" +
+            $"Authority: {ownable.Authority.Value}\n" +
+            $"Local Authority: { ownable.LocalAuthority.Value}");
+        GUILayout.EndArea();
+        Handles.EndGUI();        
+    }
 }

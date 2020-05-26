@@ -1,13 +1,14 @@
 ﻿using Davinet;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class RigidbodyOwnershipVisualizer : MonoBehaviour
 {
     [SerializeField]
-    float globalAuthorityValue = 0.5f;
+    float globalAuthorityColorStrength = 0.5f;
 
     [SerializeField]
-    float localAuthorityValue = 0.5f;
+    float localAuthorityColorStrength = 0.5f;
 
     private Rigidbody rb;
     private OwnableObject ownable;
@@ -33,20 +34,20 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
 
     private void LocalAuthority_OnChanged(int arg1, int arg2)
     {
-        //UpdateColor();
+        UpdateColor();
     }
 
     private void Authority_OnChanged(int arg1, int arg2)
     {
-        //UpdateColor();
+        UpdateColor();
     }
 
     private void Owner_OnChanged(int arg1, int arg2)
     {
-        //UpdateColor();
+        UpdateColor();
     }
 
-    private void FixedUpdate()
+    private void UpdateColor()
     {
         PlayerColor[] playerColors = FindObjectsOfType<PlayerColor>();
 
@@ -54,26 +55,20 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
 
         foreach (PlayerColor playerColor in playerColors)
         {
-            float h, s, v;
-            Color.RGBToHSV(playerColor.Col.Value, out h, out s, out v);
             OwnableObject.AuthorityType type;
 
             if (ownable.HasOwnership(playerColor.GetComponent<OwnableObject>().Owner.Value))
             {
-                thisRenderer.material.color = Color.HSVToRGB(h, s, v);
+                thisRenderer.material.color = playerColor.Col.Value;
                 isClaimed = true;
                 break;
             }   
             else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value, out type))
             {
                 if (type == OwnableObject.AuthorityType.Global)
-                {
-                    thisRenderer.material.color = Color.HSVToRGB(h, s * globalAuthorityValue, v * localAuthorityValue);
-                }
+                    thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, globalAuthorityColorStrength);
                 else
-                {
-                    thisRenderer.material.color = Color.HSVToRGB(h, s * localAuthorityValue, v * localAuthorityValue);
-                }
+                    thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, localAuthorityColorStrength);
 
                 isClaimed = true;
                 break;
@@ -81,8 +76,6 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
         }
 
         if (!isClaimed)
-        {
             thisRenderer.material.color = defaultColor;
-        }
     }
 }
