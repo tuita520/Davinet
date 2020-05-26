@@ -75,6 +75,8 @@ namespace Davinet
 
         public bool HasAuthority(int authority, out AuthorityType type)
         {
+            type = 0;
+
             if (Authority.Value == authority)
             {
                 type = AuthorityType.Global;
@@ -86,7 +88,7 @@ namespace Davinet
                 return true;
             }
 
-            type = 0;
+            
             return false;
         }
 

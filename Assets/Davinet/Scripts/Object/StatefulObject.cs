@@ -129,15 +129,19 @@ namespace Davinet
                     IStateField field = (IStateField)selectedBehaviour.Value[fieldIndex].GetValue(selectedBehaviour.Key);
 
                     if (!clear)
+                    {
                         field.Read(reader);
-                    else
-                        field.Pass(reader);
 
-                    // After the arbiter reads the fields, it is responsible to propagate these
-                    // changes to all remotes. Non-arbiter remotes will mark them clean, so that if
-                    // they aquire ownership or authority of an object they will not send old data.
-                    if (!arbiter)
-                        field.IsDirty = false;
+                        // After the arbiter reads the fields, it is responsible to propagate these
+                        // changes to all remotes. Non-arbiter remotes will mark them clean, so that if
+                        // they aquire ownership or authority of an object they will not send old data.
+                        if (!arbiter)
+                            field.IsDirty = false;
+                    }
+                    else
+                    {
+                        field.Pass(reader);
+                    }
                 }
             }
         }

@@ -1,8 +1,7 @@
 ﻿using Davinet;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 
-public class RigidbodyOwnershipVisualizer : MonoBehaviour
+public class OwnershipVisualizer : MonoBehaviour
 {
     [SerializeField]
     float globalAuthorityColorStrength = 0.5f;
@@ -10,7 +9,6 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
     [SerializeField]
     float localAuthorityColorStrength = 0.5f;
 
-    private Rigidbody rb;
     private OwnableObject ownable;
     private Renderer thisRenderer;
 
@@ -18,7 +16,6 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
         thisRenderer = GetComponent<Renderer>();
 
         defaultColor = thisRenderer.material.color;
@@ -56,6 +53,9 @@ public class RigidbodyOwnershipVisualizer : MonoBehaviour
         foreach (PlayerColor playerColor in playerColors)
         {
             OwnableObject.AuthorityType type;
+
+            if (playerColor.GetComponent<OwnableObject>().Owner.Value == 0)
+                continue;
 
             if (ownable.HasOwnership(playerColor.GetComponent<OwnableObject>().Owner.Value))
             {
