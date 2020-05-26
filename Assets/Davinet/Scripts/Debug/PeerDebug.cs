@@ -51,16 +51,24 @@ namespace Davinet
             return readyReaders;
         }
 
-        public void SendStateDelayed(NetDataWriter writer, NetManager manager)
+        public void SendStateDelayed(NetDataWriter writer, NetManager manager, bool hasListenClient)
         {
-            StartCoroutine(SendStateDelayedRoutine(writer, manager));
+            StartCoroutine(SendStateDelayedRoutine(writer, manager, hasListenClient));
         }
 
-        private IEnumerator SendStateDelayedRoutine(NetDataWriter writer, NetManager manager)
+        private IEnumerator SendStateDelayedRoutine(NetDataWriter writer, NetManager manager, bool hasListenClient)
         {
+            if (hasListenClient)
+                manager.ConnectedPeerList.Find(x => x.Id == 0).Send(writer, DeliveryMethod.ReliableOrdered);
+
             int delayMilliseconds = Random.Range(settings.minLatency, settings.maxLatency);
             yield return new WaitForSeconds(delayMilliseconds / (float)1000);
-            manager.SendToAll(writer, DeliveryMethod.ReliableUnordered);
+
+            for (int i = 0; i < manager.ConnectedPeerList.Count; i++)
+            {
+                if (!hasListenClient || manager.ConnectedPeerList[i].Id != 0)
+                    manager.ConnectedPeerList[i].Send(writer, DeliveryMethod.ReliableOrdered);
+            }
         }
     }
 }

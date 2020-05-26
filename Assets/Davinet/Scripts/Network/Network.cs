@@ -50,6 +50,9 @@ namespace Davinet
 
             client = new Peer(debug);
             client.Connect(address, port, server != null);
+
+            if (server != null)
+                server.HasListenClient = true;
         }
 
         private void OnBeforeFrame()

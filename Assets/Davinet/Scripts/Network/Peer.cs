@@ -28,6 +28,8 @@ namespace Davinet
 
         private PeerDebug debug;
 
+        public bool HasListenClient { get; set; }
+
         public Peer() : this(null)
         {
         }
@@ -147,7 +149,7 @@ namespace Davinet
             netManager.Start();
             netManager.Connect(address, port, "Davinet");
 
-            role = listenClient ? Role.ListenClient : Role.Client;            
+            role = listenClient ? Role.ListenClient : Role.Client;
         }
 
         public void PollEvents()
@@ -160,7 +162,7 @@ namespace Davinet
 
             netManager.PollEvents();
 
-            if (debug != null && debug.settings.simulateLatency)
+            if (role != Role.ListenClient && debug != null && debug.settings.simulateLatency)
             {
                 foreach (NetPacketReader reader in debug.GetAllReadyReaders())
                 {
@@ -177,7 +179,7 @@ namespace Davinet
 
                 if (debug != null && debug.settings.simulateLatency)
                 {
-                    debug.SendStateDelayed(netDataWriter, netManager);
+                    debug.SendStateDelayed(netDataWriter, netManager, HasListenClient);
                     // TODO: This should probably be pooled when simulating latency.
                     netDataWriter = new NetDataWriter();
                 }
