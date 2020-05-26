@@ -12,8 +12,8 @@ namespace Davinet
     /// </summary>
     public class OwnableObject : MonoBehaviour
     {
-        public StateInt Owner { get; private set; }
-        public StateInt Authority { get; private set; }
+        public StateInt Owner { get; set; }
+        public StateInt Authority { get; set; }
 
         public bool CanRelinquishAuthority { get; set; }
 
@@ -50,7 +50,7 @@ namespace Davinet
 
         public void TakeAuthority(int authority)
         {
-            if (Owner.Value == 0 || Owner.Value == authority)
+            if (authority != 0 && (Owner.Value == 0 || Owner.Value == authority))
             {
                 Authority.Value = authority;
             }

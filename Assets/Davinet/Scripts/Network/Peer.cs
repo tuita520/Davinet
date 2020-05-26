@@ -114,8 +114,6 @@ namespace Davinet
 
         private void ReadState(NetPacketReader reader)
         {
-            int frame = reader.GetInt();
-
             if (debug != null && debug.settings.simulateLatency)
             {
                 debug.InsertDelayedReader(UnityEngine.Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, reader);
