@@ -29,7 +29,7 @@ Davinet sends all data about each objects state over the network. For a rigidbod
 *Work in progress...*
 
 ## Stateful world abstraction layer
-To avoid having to code directly against the networking layer, gameplay logic would talk to an abstraction layer called the **Stateful World**. Every game object that is part of the gameplay logic **must** do the following.
+To avoid having to code directly against the networking layer, gameplay logic talks to an abstraction layer called the **Stateful World**. Every game object that is part of the gameplay logic **must** do the following.
 1. Have the `StatefulObject` and `OwnableObject` components attached to it.
 2. Added to world using `StatefulWorld.Add`.
 2. Components with frequent state updates (position, rotation) should implement the `IStreamable` interface (see `StatefulRigidbody.cs`).
@@ -39,7 +39,9 @@ The network will handle serializing spawns, `IStateField` and `IStreamable` stat
 
 # Contributing
 
-Contributions are most welcome, and can either take the form of pull requests or direct feedback (the Unity thread is the best place for discussion!). To find areas that need improvement, you can search for comments marked `// TODO:`. If you're interested in frequently contributing, feel free to get in touch with the repo owner ([me, Roystan/Iron-Warrior/](https://github.com/IronWarrior)). The following needs to be completed for a fully functional prototype.
+Contributions are most welcome, and can either take the form of pull requests or direct feedback (the Unity thread is the best place for discussion!). To find areas that need improvement, you can search for comments marked `// TODO:`. If you're interested in frequently contributing, feel free to get in touch with the repo owner ([me, Roystan/Iron-Warrior](https://github.com/IronWarrior)). 
+
+**The following needs to be completed for a fully functional prototype.**
 
 1. ***Essential*** Complete distributed authority scheme (functions correctly with client, server and listen client).
 2. Ability to remove objects from the stateful world.
