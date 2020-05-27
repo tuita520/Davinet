@@ -92,6 +92,9 @@ namespace Davinet
 
         public void WriteState(NetDataWriter writer)
         {
+            // TODO: This packet structure requires lots of hard coding, making it not
+            // very error resistent. Should either find a better structure, or encapsulate
+            // common functionality.
             writer.Put((byte)PacketType.State);
             writer.Put(world.Frame);
 

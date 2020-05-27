@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using Davinet;
 
 public class PlayerInputController : MonoBehaviour, IInputController
 {
@@ -70,7 +71,7 @@ public class PlayerInputController : MonoBehaviour, IInputController
     }
 
     public void SetEnabled(bool value)
-    {
+    {       
         if (value == poll)
             return;
 

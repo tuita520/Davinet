@@ -36,7 +36,8 @@ public class OwnableObjectEditor : Editor
         GUILayout.Box($"Owner: { ownable.Owner.Value}\n" +
             $"Authority: {ownable.Authority.Value}\n" +
             $"Owner frame: {ownershipChangedFrame}\n" +
-            $"Authority frame: {authorityChangedFrame}");
+            $"Authority frame: {authorityChangedFrame}\n" +
+            $"Sleeping: {ownable.GetComponent<Rigidbody>().IsSleeping()}");
         GUILayout.EndArea();
         Handles.EndGUI();        
     }

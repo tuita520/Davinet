@@ -18,7 +18,10 @@ public class StatefulRigidbody : MonoBehaviour, IStreamable
         Vector3 velocity = reader.GetVector3();
         Vector3 angularVelocity = reader.GetVector3();
 
-        float epsilon = 0.0001f;
+        // Check if the new updates are very similiar to the current position.
+        // If they are, they will not be applied to allow this object to fall asleep.
+        // TODO: A better way of handling this.
+        float epsilon = 0.00001f;
 
         if (!rb.position.PerComponentIsEqual(position, epsilon))
             rb.position = position;

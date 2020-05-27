@@ -55,12 +55,6 @@ namespace Davinet
             OnAdd?.Invoke(o);
         }
 
-        public void Remove(StatefulObject o)
-        {
-            statefulObjects.Remove(o.ID);
-            OnRemove?.Invoke(o);
-        }
-
         public StatefulObject GetStatefulObject(int id)
         {
             return statefulObjects[id];

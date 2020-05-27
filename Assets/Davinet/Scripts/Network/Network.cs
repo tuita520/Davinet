@@ -1,15 +1,7 @@
-﻿using UnityEngine;
-
-namespace Davinet
+﻿namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
-        [SerializeField]
-        bool useJitterBuffer;
-
-        [SerializeField]
-        int jitterBufferDelayFrames;
-
         private void Awake()
         {
             gameObject.AddComponent<BeforeFixedUpdate>().OnBeforeFixedUpdate += OnBeforeFrame;
@@ -65,6 +57,7 @@ namespace Davinet
             if (client != null)
                 client.PollEvents();
 
+            // TODO: Re-implement jitter buffer. Implementation was removed during code refactor.
             /*
             if (isClient)
             {

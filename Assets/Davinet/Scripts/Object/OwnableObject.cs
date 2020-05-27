@@ -1,9 +1,9 @@
 ﻿using LiteNetLib.Utils;
-using System.Security.AccessControl;
 using UnityEngine;
 
 namespace Davinet
 {
+    // TODO: This is currently not functioning correctly...needs a bit more work!
     /// <summary>
     /// Peers on the network may have authority over an object,
     /// or own the object, which by default also gives them authority.
@@ -25,19 +25,6 @@ namespace Davinet
         {
             Authority = new StateInt();
             Owner = new StateInt();
-
-            Authority.OnChanged += Authority_OnChanged;
-            Owner.OnChanged += Owner_OnChanged;
-        }
-
-        private void Owner_OnChanged(int arg1, int arg2)
-        {
-            //ownershipFrameChanged = StatefulWorld.Instance.Frame;
-        }
-
-        private void Authority_OnChanged(int arg1, int arg2)
-        {
-            //authorityFrameChanged = StatefulWorld.Instance.Frame;
         }
 
         public void SetOwnership(int owner)
@@ -129,10 +116,10 @@ namespace Davinet
                 frame = StatefulWorld.Instance.Frame;
             else
             {
-                if (writeAuthority)
-                    frame = authorityFrameChanged;
-                else
+                if (writeOwner)
                     frame = ownershipFrameChanged;
+                else
+                    frame = authorityFrameChanged;
             }
 
             writer.Put(frame);

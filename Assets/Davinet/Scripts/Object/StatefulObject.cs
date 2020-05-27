@@ -103,6 +103,13 @@ namespace Davinet
             }
         }
 
+        /// <summary>
+        /// Read all state fields in this packet, for each behaviour attached to this object.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="arbiter"></param>
+        /// <param name="clear">When true, state fields changes will not be applied. This is useful if the local peer has
+        /// authority over this object.</param>
         public void ReadStateFields(NetDataReader reader, bool arbiter, bool clear=false)
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
