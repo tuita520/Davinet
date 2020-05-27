@@ -39,7 +39,9 @@ The network will handle serializing spawns, `IStateField` and `IStreamable` stat
 
 # Contributing
 
-Contributions are most welcome, and can either take the form of pull requests or direct feedback (the Unity thread is the best place for discussion!). To find areas that need improvement, you can search for comments marked `// TODO:`. If you're interested in frequently contributing, feel free to get in touch with the repo owner ([me, Roystan/Iron-Warrior/](https://github.com/IronWarrior)). The following needs to be completed for a fully functional prototype.
+Contributions are most welcome, and can either take the form of pull requests or direct feedback (the Unity thread is the best place for discussion!). To find areas that need improvement, you can search for comments marked `// TODO:`. If you're interested in frequently contributing, feel free to get in touch with the repo owner ([me, Roystan/Iron-Warrior](https://github.com/IronWarrior)). 
+
+**The following needs to be completed for a fully functional prototype.**
 
 1. ***Essential*** Complete distributed authority scheme (functions correctly with client, server and listen client).
 2. Ability to remove objects from the stateful world.
