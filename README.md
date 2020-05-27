@@ -9,7 +9,7 @@ It has architecture goals to be a minimalist package with loose coupling, extens
 Davinet currently uses [LiteNetLib](https://github.com/RevenantX/LiteNetLib) for its transport layer.
 
 # Current status
-Works well in LAN. Distributed authority system needs to be completed to avoid conflicts that arise from environments with latency. This is noticeable when using the latency simulator.
+**Working towards proof of concept. See below for feature goals in detail**. Works well in LAN. Distributed authority system needs to be completed to avoid conflicts that arise from environments with latency. This is noticeable when using the latency simulator.
 
 # Getting started
 This repository contains a sample project that can be found in `Sample/PhysicsSample`. To run this scene, you can make a build and launch multiple instances of the executable. Alternatively, Davinet can create a **Junction Unity Project** to allow you to open the project in a second Unity Editor instance for easier testing. Unity does not normally allow opening a project in multiple Editor instances. To workaround this, Davinet will create a dummy project and create [junctions](https://docs.microsoft.com/en-us/windows/win32/fileio/hard-links-and-junctions) to `Assets`, `ProjectSettings` and `Packages`. This tool can be found in Unity in the Davinet menu (Windows only).
