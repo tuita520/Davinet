@@ -29,7 +29,7 @@ Davinet sends all data about each objects state over the network. For a rigidbod
 *Work in progress...*
 
 ## Stateful world abstraction layer
-To avoid having to code directly against the networking layer, gameplay logic would talk to an abstraction layer called the **Stateful World**. Every game object that is part of the gameplay logic **must** do the following.
+To avoid having to code directly against the networking layer, gameplay logic talks to an abstraction layer called the **Stateful World**. Every game object that is part of the gameplay logic **must** do the following.
 1. Have the `StatefulObject` and `OwnableObject` components attached to it.
 2. Added to world using `StatefulWorld.Add`.
 2. Components with frequent state updates (position, rotation) should implement the `IStreamable` interface (see `StatefulRigidbody.cs`).
