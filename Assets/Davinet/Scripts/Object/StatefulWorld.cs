@@ -13,9 +13,8 @@ namespace Davinet
         [SerializeField]
         IdentifiableObject[] registeredPrefabs;
 
+        public event System.Action OnInitialize;
         public event System.Action<StatefulObject> OnAdd;
-        public event System.Action<StatefulObject> OnRemove;
-        public event System.Action<OwnableObject> OnSetOwnership;
 
         public Dictionary<int, IdentifiableObject> registeredPrefabsMap;
         public Dictionary<int, StatefulObject> statefulObjects;
@@ -43,12 +42,19 @@ namespace Davinet
                 statefulObject.ID = id;
                 statefulObjects[id] = statefulObject;
             }
+
+            OnInitialize?.Invoke();
         }
 
         public void Add(StatefulObject o)
         {
             int id = statefulObjects.Count + 1;
 
+            Add(o, id);
+        }
+
+        public void Add(StatefulObject o, int id)
+        {
             o.ID = id;
             statefulObjects[id] = o;
 

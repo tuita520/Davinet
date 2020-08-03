@@ -75,7 +75,7 @@ namespace Davinet
 
         private void StatefulWorld_OnAdd(StatefulObject obj)
         {
-            if (arbiter)
+            if (obj.IsDirty && arbiter)
             {
                 IdentifiableObject o = obj.GetComponent<IdentifiableObject>();
 
@@ -187,6 +187,8 @@ namespace Davinet
                 {
                     writer.Put(kvp.Key);
                     writer.Put(kvp.Value.GUID);
+
+                    kvp.Value.GetComponent<StatefulObject>().IsDirty = false;
                 }
             }
 
@@ -229,10 +231,10 @@ namespace Davinet
             {                
                 int id = reader.GetInt();
 
+                IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
+
                 // If this remote is not the arbiter, the one sending the data must be.
                 world.GetStatefulObject(id).Ownable.Read(reader, arbiter);
-
-                IInputController inputController = world.statefulObjects[id].GetComponent<IInputController>();
 
                 if (inputController != null)
                     inputController.SetEnabled(world.GetStatefulObject(id).Ownable.HasOwnership(remoteID));
@@ -306,7 +308,8 @@ namespace Davinet
                 if (!world.statefulObjects.ContainsKey(id))
                 {
                     IdentifiableObject clone = Object.Instantiate(world.registeredPrefabsMap[GUID], Vector3.zero, Quaternion.identity);
-                    world.statefulObjects[id] = clone.GetComponent<StatefulObject>();
+                    clone.GetComponent<StatefulObject>().IsDirty = false;
+                    world.Add(clone.GetComponent<StatefulObject>(), id);
                 }
             }
         }

@@ -130,12 +130,18 @@ namespace Davinet
 
             writer.Put(frame);
 
+            DataType dataType;
+
             if (writeOwner && writeAuthority)
-                writer.Put((byte)DataType.OwnershipAndAuthority);
+                dataType = DataType.OwnershipAndAuthority;
             else if (writeOwner)
-                writer.Put((byte)DataType.Ownership);
-            else if (writeAuthority)
-                writer.Put((byte)DataType.Authority);
+            {
+                dataType = DataType.Ownership;
+            }
+            else
+                dataType = DataType.Authority;
+
+            writer.Put((byte)dataType);
 
             if (writeOwner)
             {                
@@ -161,7 +167,7 @@ namespace Davinet
             bool readAuthority = datatype == DataType.Authority || datatype == DataType.OwnershipAndAuthority;
 
             if (readOwnership)
-            {
+            {             
                 int owner = reader.GetInt();
 
                 if (frame >= ownershipFrameChanged)

@@ -12,6 +12,9 @@ namespace Davinet
         public int ID { get; set; }
         public OwnableObject Ownable { get; private set; }
 
+        // TODO: Should the StatefulObject just be an IStateField of the world?
+        public bool IsDirty { get; set; } = true;
+
         public enum DataType
         {
             Object,
