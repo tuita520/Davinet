@@ -69,7 +69,7 @@ namespace Davinet
 
         public void TakeAuthority(int authority)
         {
-            if (authority != 0 && (Owner.Value == 0 || Owner.Value == authority))
+            if (authority != 0 && Owner.Value == 0)
             {
                 Authority.Value = authority;
             }
@@ -115,6 +115,9 @@ namespace Davinet
                 writer.Put(id);
             else
                 return;
+
+            if (id != 1)
+                Debug.Log($"Writing ownerthority for {id}");
 
             int frame;
 
