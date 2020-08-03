@@ -116,9 +116,6 @@ namespace Davinet
             else
                 return;
 
-            if (id != 1)
-                Debug.Log($"Writing ownerthority for {id}");
-
             int frame;
 
             if (!arbiter)
