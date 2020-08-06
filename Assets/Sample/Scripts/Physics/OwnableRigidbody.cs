@@ -37,7 +37,7 @@ public class OwnableRigidbody : MonoBehaviour
     {
         if (collision.gameObject.TryGetComponent(out OwnableObject targetOwnable))
         {
-            targetOwnable.TakeAuthority(ownable.Authority.Value);
+            targetOwnable.TryTakeAuthority(ownable.Authority.Value);
         }
     }
 }

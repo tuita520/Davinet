@@ -17,9 +17,9 @@ public class StateObjectReference : StateField<StatefulObject>
         int id = reader.GetInt();
 
         if (id == 0)
-            Value = null;
+            Set(null);
         else
-            Value = StatefulWorld.Instance.GetStatefulObject(id);
+            Set(StatefulWorld.Instance.GetStatefulObject(id));
     }
 
     public override void Write(NetDataWriter writer)

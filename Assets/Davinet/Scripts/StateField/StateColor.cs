@@ -24,7 +24,7 @@ public class StateColor : StateField<Color>
         color.b = reader.GetFloat();
         color.a = reader.GetFloat();
 
-        Value = color;
+        Set(color);
     }
 
     public override void Write(NetDataWriter writer)

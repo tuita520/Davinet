@@ -19,6 +19,8 @@ namespace Davinet
     /// </summary>
     public class OwnableObject : MonoBehaviour
     {
+        public event System.Action<OwnableObject, int> OnAuthorityChanged;
+
         public StateInt Owner { get; set; }
         public StateInt Authority { get; set; }
 
@@ -31,16 +33,13 @@ namespace Davinet
         {
             Authority = new StateInt();
             Owner = new StateInt();
+
+            Authority.OnChanged += Authority_OnChanged;
         }
 
-        public void SetOwnership(int owner)
+        private void Authority_OnChanged(int current, int previous)
         {
-            if (Owner.Value == 0)
-            {
-                Owner.Value = owner;
-
-                TakeAuthority(owner);                
-            }
+            OnAuthorityChanged(this, current);
         }
 
         public void GrantOwnership(int owner)
@@ -52,12 +51,6 @@ namespace Davinet
             authorityFrameChanged = 1;
         }
 
-        public void RelinquishOwnership()
-        {
-            if (Owner.Value != 0)
-                Owner.Value = 0;
-        }
-
         public void RelinquishAuthority()
         {
             if (!CanRelinquishAuthority)
@@ -67,17 +60,38 @@ namespace Davinet
                 Authority.Value = 0;
         }
 
-        public void TakeAuthority(int authority)
+        public bool TryTakeAuthority(int authority)
         {
-            if (authority != 0 && Owner.Value == 0)
+            if (StatefulWorld.Instance.CanTakeAuthority(authority) && authority != 0 && Owner.Value == 0)
             {
                 Authority.Value = authority;
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
-        public bool CanTakeOwnership(int owner)
+        public bool TryTakeOwnership(int owner)
         {
-            return owner == Owner.Value || Owner.Value == 0;
+            if (StatefulWorld.Instance.CanTakeAuthority(owner) && owner == Owner.Value || Owner.Value == 0)
+            {
+                Owner.Value = owner;
+                TryTakeAuthority(owner);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public void RelinquishOwnership()
+        {
+            if (Owner.Value != 0)
+                Owner.Value = 0;
         }
 
         public bool HasAuthority(int authority)

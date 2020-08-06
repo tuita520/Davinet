@@ -4,6 +4,8 @@
     {
         private void Awake()
         {
+            authorityArbiter = new AuthorityArbiter();
+
             gameObject.AddComponent<BeforeFixedUpdate>().OnBeforeFixedUpdate += OnBeforeFrame;
             gameObject.AddComponent<AfterFixedUpdate>().OnAfterFixedUpdate += OnAfterFrame;
         }
@@ -11,9 +13,11 @@
         private Peer server;
         private Peer client;
 
+        private AuthorityArbiter authorityArbiter;
+
         public void StartServer(int port, PeerDebug.Settings debugSettings = null)
-        {
-            StatefulWorld.Instance.Initialize();
+        {          
+            StatefulWorld.Instance.Initialize(authorityArbiter);
 
             PeerDebug debug = null;
 
@@ -24,13 +28,14 @@
             }
 
             server = new Peer(debug);
+            server.OnReceivePeerId += OnReceivePeerId;
             server.Listen(port);
         }
 
         public void ConnectClient(string address, int port, PeerDebug.Settings debugSettings = null)
         {
             if (server == null)
-                StatefulWorld.Instance.Initialize();
+                StatefulWorld.Instance.Initialize(authorityArbiter);
 
             PeerDebug debug = null;
 
@@ -41,10 +46,16 @@
             }
 
             client = new Peer(debug);
+            client.OnReceivePeerId += OnReceivePeerId;
             client.Connect(address, port, server != null);
 
             if (server != null)
                 server.HasListenClient = true;
+        }
+
+        private void OnReceivePeerId(int peerId)
+        {
+            authorityArbiter.AddLocalAuthority(peerId);
         }
 
         private void OnBeforeFrame()

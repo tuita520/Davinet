@@ -21,6 +21,8 @@ namespace Davinet
 
         public int Frame { get; set; }
 
+        private AuthorityArbiter authorityArbiter;
+
         private void Awake()
         {
             registeredPrefabsMap = new Dictionary<int, IdentifiableObject>();
@@ -31,34 +33,48 @@ namespace Davinet
             }
         }
 
-        public void Initialize()
+        // TODO: Allow authority arbiter to be null, or replace with interface.
+        // If it is not present, all objects should be permitted to write state fields.
+        public void Initialize(AuthorityArbiter authorityArbiter)
         {
             statefulObjects = new Dictionary<int, StatefulObject>();
 
             foreach (StatefulObject statefulObject in FindObjectsOfType<StatefulObject>())
             {
-                int id = statefulObjects.Count + 1;
-
-                statefulObject.ID = id;
-                statefulObjects[id] = statefulObject;
+                Add(statefulObject, true);
             }
+
+            this.authorityArbiter = authorityArbiter;
 
             OnInitialize?.Invoke();
         }
 
-        public void Add(StatefulObject o)
+        public void Add(StatefulObject o, bool silent = false)
         {
             int id = statefulObjects.Count + 1;
 
             Add(o, id);
         }
 
-        public void Add(StatefulObject o, int id)
+        public void Add(StatefulObject o, int id, bool silent=false)
         {
             o.ID = id;
             statefulObjects[id] = o;
 
-            OnAdd?.Invoke(o);
+            o.Ownable.OnAuthorityChanged += Ownable_OnAuthorityChanged;
+
+            if (!silent)
+                OnAdd?.Invoke(o);
+        }
+
+        public bool CanTakeAuthority(int authority)
+        {
+            return authorityArbiter.CanWrite(authority);
+        }
+
+        private void Ownable_OnAuthorityChanged(OwnableObject o, int authority)
+        {
+            o.GetComponent<StatefulObject>().SetFieldsWritable(authorityArbiter.CanWrite(authority));
         }
 
         public StatefulObject GetStatefulObject(int id)

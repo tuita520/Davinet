@@ -9,10 +9,11 @@ public abstract class StateField<T> : IStateField
 
     /// <summary>
     /// Initializes with empty data and <see cref="IsDirty"/> set false.
+    /// StateFields are writable by default.
     /// </summary>
     public StateField()
     {
-        
+        writable = true;
     }
 
     /// <summary>
@@ -49,19 +50,33 @@ public abstract class StateField<T> : IStateField
 
         set
         {
-            T previous = this.value;
-            this.value = value;
-            IsDirty = true;
+            if (!writable)
+                return;
 
-            OnChanged?.Invoke(this.value, previous);                  
+            Set(value);
         }
+    }
+
+    protected void Set(T value)
+    {
+        T previous = this.value;
+        this.value = value;
+        IsDirty = true;
+
+        OnChanged?.Invoke(this.value, previous);
     }
 
     public bool IsDirty { get; set; }
 
     private T value;
+    private bool writable;
 
     public abstract void Write(NetDataWriter writer);
     public abstract void Read(NetDataReader reader);
     public abstract void Pass(NetDataReader reader);
+
+    public void SetWritable(bool value)
+    {
+        writable = value;
+    }
 }

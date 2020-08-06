@@ -1,5 +1,6 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
+using System;
 using System.Collections.Generic;
 
 namespace Davinet
@@ -11,6 +12,8 @@ namespace Davinet
     /// </summary>
     public class Peer
     {
+        public event Action<int> OnReceivePeerId;
+
         private Remote remote;
         private NetManager netManager;
         private NetDataWriter netDataWriter;
@@ -105,6 +108,8 @@ namespace Davinet
             else if (packetType == PacketType.Join)
             {
                 int remoteID = reader.GetInt();
+                OnReceivePeerId?.Invoke(remoteID);
+
                 int frame = reader.GetInt();
 
                 StatefulWorld.Instance.Frame = frame;
@@ -129,7 +134,7 @@ namespace Davinet
         public void Listen(int port)
         {
             if (role != Role.Inactive)
-                throw new System.Exception($"Cannot start listening with peer already performing the {role} role.");
+                throw new Exception($"Cannot start listening with peer already performing the {role} role.");
 
             listener.PeerConnectedEvent += Listener_PeerConnectedEvent;
             netManager.Start(port);
@@ -139,12 +144,14 @@ namespace Davinet
             remote = new Remote(StatefulWorld.Instance, true, false, 0);
 
             StatefulWorld.Instance.Frame = 0;
+
+            OnReceivePeerId?.Invoke(0);
         }
 
         public void Connect(string address, int port, bool listenClient=false)
         {
             if (role != Role.Inactive)
-                throw new System.Exception($"Cannot connect with peer already performing the {role} role.");
+                throw new Exception($"Cannot connect with peer already performing the {role} role.");
 
             netManager.Start();
             netManager.Connect(address, port, "Davinet");

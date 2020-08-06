@@ -8,7 +8,7 @@ public class StateBool : StateField<bool>
 
     public override void Read(NetDataReader reader)
     {
-        Value = reader.GetBool();
+        Set(reader.GetBool());
     }
 
     public override void Pass(NetDataReader reader)

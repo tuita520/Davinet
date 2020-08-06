@@ -8,7 +8,7 @@ public class StateInt : StateField<int>
 
     public override void Read(NetDataReader reader)
     {
-        Value = reader.GetInt();
+        Set(reader.GetInt());
     }
 
     public override void Pass(NetDataReader reader)

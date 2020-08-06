@@ -44,7 +44,7 @@ public class ForcePower : MonoBehaviour
         if (targetRb != null)
         {
             targetRb.AddExplosionForce(force, rb.position, radius, upwardsModifier);
-            targetRb.GetComponent<StatefulObject>()?.Ownable.TakeAuthority(GetComponent<StatefulObject>().Ownable.Owner.Value);
+            targetRb.GetComponent<StatefulObject>()?.Ownable.TryTakeAuthority(GetComponent<StatefulObject>().Ownable.Owner.Value);
         }
     }
 }

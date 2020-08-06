@@ -59,6 +59,22 @@ namespace Davinet
             }
         }
 
+        public void SetFieldsWritable(bool value)
+        {
+            for (int i = 0; i < stateFieldsByMonoBehaviour.Count; i++)
+            {
+                var kvp = stateFieldsByMonoBehaviour[i];
+
+                for (int j = 0; j < kvp.Value.Count; j++)
+                {
+                    PropertyInfo info = kvp.Value[j];
+
+                    IStateField field = (IStateField)info.GetValue(kvp.Key);
+                    field.SetWritable(value);
+                }
+            }
+        }
+
         public void WriteStateFields(NetDataWriter writer, int id, bool writeEvenIfNotDirty=false)
         {
             bool objectHeaderWritten, behaviourHeaderWritten;

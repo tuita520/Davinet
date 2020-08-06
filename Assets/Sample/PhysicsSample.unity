@@ -30020,6 +30020,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: DebugController
       objectReference: {fileID: 0}
+    - target: {fileID: 6184697655075301462, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35, type: 3}
 --- !u!114 &2177566800925322026

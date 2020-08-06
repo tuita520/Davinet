@@ -40,6 +40,11 @@ public class PlayerInput : IStateField
         //mouseRay.direction = reader.GetVector3();
     }
 
+    public void SetWritable(bool value)
+    {
+        // Do nothing...for now!
+    }
+
     public void Write(NetDataWriter writer)
     {
         writer.Put(moveInput);
