@@ -133,13 +133,20 @@ namespace Davinet
             DataType dataType;
 
             if (writeOwner && writeAuthority)
+            {
                 dataType = DataType.OwnershipAndAuthority;
+                Debug.Log($"Writing ownership to {Owner.Value} and authority to {Authority.Value}.", id, LogLevel.Ownership);
+            }
             else if (writeOwner)
             {
                 dataType = DataType.Ownership;
+                Debug.Log($"Writing ownership to {Owner.Value}.", id, LogLevel.Ownership);
             }
             else
+            {
                 dataType = DataType.Authority;
+                Debug.Log($"Writing authority to {Authority.Value}.", id, LogLevel.Authority);
+            }
 
             writer.Put((byte)dataType);
 

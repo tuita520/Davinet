@@ -25,9 +25,9 @@ public class DebugMenu : MonoBehaviour
         foreach (var kvp in StatefulWorld.Instance.statefulObjects)
         {
             if (kvp.Key == kvp.Value.ID)
-                Debug.Log("StatefulObject IDs correctly match their keyed ID.");
+                UnityEngine.Debug.Log("StatefulObject IDs correctly match their keyed ID.");
             else
-                Debug.LogError($"StatefulObject ID {kvp.Value.ID} is keyed on {kvp.Key}");
+                UnityEngine.Debug.LogError($"StatefulObject ID {kvp.Value.ID} is keyed on {kvp.Key}");
         }
     }
 }

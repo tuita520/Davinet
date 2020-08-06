@@ -228,6 +228,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statefulObjectDebugViewPrefab: {fileID: 1513586441101164061, guid: bf80d4363dad7f341bb8a124ae1e1d4e,
     type: 3}
+  logLevel: 30
 --- !u!114 &2853094453960917640
 MonoBehaviour:
   m_ObjectHideFlags: 0
