@@ -21,8 +21,17 @@ public class StatefulObjectDebugView : MonoBehaviour
 
     private void FixedUpdate()
     {
-        text.text = $"ID: {statefulObject.ID}\n" +
+        string statefulText = $"ID: {statefulObject.ID}\n" +
             $"Owner: { statefulObject.Ownable.Owner.Value}\n" +
             $"Authority: {statefulObject.Ownable.Authority.Value}";
+
+        string output = statefulText;
+
+        if (statefulObject.TryGetComponent(out OwnableRigidbody ownableRigidbody))
+        {
+            output += $"\nSleep: {ownableRigidbody.IsSleeping}";
+        }
+
+        text.text = output;
     }
 }

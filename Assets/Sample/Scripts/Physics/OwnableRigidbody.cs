@@ -6,29 +6,31 @@ public class OwnableRigidbody : MonoBehaviour
     private Rigidbody rb;
     private OwnableObject ownable;
 
-    private bool isSleeping;
+    public bool IsSleeping;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         ownable = GetComponent<OwnableObject>();
+
+        rb.sleepThreshold = 0.01f;
     }    
 
     private void FixedUpdate()
     {
-        if (!isSleeping)
+        if (!IsSleeping)
         {
             if (rb.IsSleeping())
             {
                 ownable.RelinquishAuthority();
-                isSleeping = true;
+                IsSleeping = true;
             }
         }
         else
         {
             if (!rb.IsSleeping())
             {
-                isSleeping = false;
+                IsSleeping = false;
             }
         }
     }

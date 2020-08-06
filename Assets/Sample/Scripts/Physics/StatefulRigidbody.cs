@@ -21,7 +21,7 @@ public class StatefulRigidbody : MonoBehaviour, IStreamable
         // Check if the new updates are very similiar to the current position.
         // If they are, they will not be applied to allow this object to fall asleep.
         // TODO: A better way of handling this.
-        float epsilon = 0.00001f;
+        float epsilon = 0.1f;
 
         if (!rb.position.PerComponentIsEqual(position, epsilon))
             rb.position = position;
