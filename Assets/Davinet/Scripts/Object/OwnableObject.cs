@@ -62,7 +62,7 @@ namespace Davinet
 
         public bool TryTakeAuthority(int authority)
         {
-            if (StatefulWorld.Instance.CanTakeAuthority(authority) && authority != 0 && Owner.Value == 0)
+            if (authority != 0 && (Authority.Value == 0 || Authority.Value == authority) && StatefulWorld.Instance.CanTakeAuthority(authority))
             {
                 Authority.Value = authority;
                 return true;
@@ -75,7 +75,7 @@ namespace Davinet
 
         public bool TryTakeOwnership(int owner)
         {
-            if (StatefulWorld.Instance.CanTakeAuthority(owner) && owner == Owner.Value || Owner.Value == 0)
+            if (StatefulWorld.Instance.CanTakeAuthority(owner) && (owner == Owner.Value || Owner.Value == 0))
             {
                 Owner.Value = owner;
                 TryTakeAuthority(owner);
