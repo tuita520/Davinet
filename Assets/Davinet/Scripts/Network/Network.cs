@@ -1,7 +1,15 @@
-﻿namespace Davinet
+﻿using UnityEngine;
+
+namespace Davinet
 {
     public class Network : SingletonBehaviour<Network>
     {
+        [SerializeField]
+        bool useJitterBuffer;
+
+        [SerializeField]
+        int jitterBufferDelayFrames = 4;
+
         private void Awake()
         {
             authorityArbiter = new AuthorityArbiter();
@@ -27,7 +35,14 @@
                 debug.Initialize(debugSettings);
             }
 
-            server = new Peer(debug);
+            JitterBuffer jitterBuffer = null;
+
+            if (useJitterBuffer)
+            {
+                jitterBuffer = new JitterBuffer(jitterBufferDelayFrames);
+            }
+
+            server = new Peer(jitterBuffer, debug);
             server.OnReceivePeerId += OnReceivePeerId;
             server.Listen(port);
         }
@@ -45,7 +60,14 @@
                 debug.Initialize(debugSettings);
             }
 
-            client = new Peer(debug);
+            JitterBuffer jitterBuffer = null;
+
+            if (useJitterBuffer && server == null)
+            {
+                jitterBuffer = new JitterBuffer(jitterBufferDelayFrames);
+            }
+
+            client = new Peer(jitterBuffer, debug);
             client.OnReceivePeerId += OnReceivePeerId;
             client.Connect(address, port, server != null);
 
@@ -63,27 +85,10 @@
             StatefulWorld.Instance.Frame++;
 
             if (server != null)
-                server.PollEvents();
+                server.PollEvents(StatefulWorld.Instance.Frame);
 
             if (client != null)
-                client.PollEvents();
-
-            // TODO: Re-implement jitter buffer. Implementation was removed during code refactor.
-            /*
-            if (isClient)
-            {
-                clientManager.PollEvents();
-
-                if (useJitterBuffer)
-                {
-                    JitterBuffer.StatePacket packet;
-                    if (clientBuffer.TryGetPacket(out packet, (int)(Time.fixedTime / Time.fixedDeltaTime)))
-                    {
-                        client.ReadState(packet.reader);
-                    }
-                }
-            }
-            */
+                client.PollEvents(StatefulWorld.Instance.Frame);
         }
 
         private void OnAfterFrame()

@@ -23,9 +23,9 @@ namespace Davinet
 
         // Contains packets that have arrived, but not yet been sent to the remote.
         // Is sorted when a new element is inserted by the order they were sent.
-        private List<StatePacket> buffer;
+        private readonly List<StatePacket> buffer;
 
-        private int delayFrames;
+        private readonly int delayFrames;
 
         public JitterBuffer(int delayFrames)
         {
@@ -50,6 +50,8 @@ namespace Davinet
                 reader = statePacketReader
             };
 
+            Debug.Log($"<color=yellow><b>Inserting</b></color> packet with remote frame <b>{packet.remoteFrame}</b> arriving at local frame <b>{packet.localArrivalFrame}</b> into jitter buffer.", LogType.Packet);
+
             // Iterate through the buffer to determine where the new packet should be placed.
             for (int i = 0; i < buffer.Count + 1; i++)
             {
@@ -73,17 +75,24 @@ namespace Davinet
             }
         }
 
-        public bool TryGetPacket(out StatePacket reader, int currentFrame)
+        public bool TryGetPacket(out StatePacket packet, int currentFrame)
         {
             if (buffer.Count > 0 && currentFrame - buffer[buffer.Count - 1].localArrivalFrame >= delayFrames)
             {
-                reader = buffer[buffer.Count - 1];
+                packet = buffer[buffer.Count - 1];
                 buffer.RemoveAt(buffer.Count - 1);
+
+                foreach (StatePacket p in buffer)
+                {
+                    p.localArrivalFrame -= currentFrame - packet.remoteFrame;
+                }
+
+                Debug.Log($"<b><color=cyan>Removing</color></b> packet at frame <b>{currentFrame}</b> with remote frame <b>{packet.remoteFrame}</b> arriving at {packet.localArrivalFrame} from jitter buffer.", LogType.Packet);
 
                 return true;
             }
 
-            reader = null;
+            packet = null;
             return false;
         }
     }

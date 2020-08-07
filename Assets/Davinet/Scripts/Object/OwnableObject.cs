@@ -149,17 +149,17 @@ namespace Davinet
             if (writeOwner && writeAuthority)
             {
                 dataType = DataType.OwnershipAndAuthority;
-                Debug.Log($"Writing ownership to {Owner.Value} and authority to {Authority.Value}.", id, LogLevel.Ownership);
+                Debug.Log($"Writing ownership to {Owner.Value} and authority to {Authority.Value}.", id, LogType.Ownership);
             }
             else if (writeOwner)
             {
                 dataType = DataType.Ownership;
-                Debug.Log($"Writing ownership to {Owner.Value}.", id, LogLevel.Ownership);
+                Debug.Log($"Writing ownership to {Owner.Value}.", id, LogType.Ownership);
             }
             else
             {
                 dataType = DataType.Authority;
-                Debug.Log($"Writing authority to {Authority.Value}.", id, LogLevel.Authority);
+                Debug.Log($"Writing authority to {Authority.Value}.", id, LogType.Authority);
             }
 
             writer.Put((byte)dataType);

@@ -3,31 +3,38 @@
 namespace Davinet
 {
     [Flags]
-    public enum LogLevel
+    public enum LogType
     {
         None = 0,
         State = 1,
         Property = 2,
         Authority = 4,
         Ownership = 8,
-        Spawn = 16
+        Spawn = 16,
+        Packet = 32
     }
 
     public static class Debug
     {
         private static ILogger logger;
-        private static LogLevel logLevel;
+        private static LogType logType;
 
-        public static void RegisterLogger(ILogger logger, LogLevel logLevel)
+        public static void RegisterLogger(ILogger logger, LogType logType)
         {
             Debug.logger = logger;
-            Debug.logLevel = logLevel;
+            Debug.logType = logType;
         }
 
-        public static void Log(string message, int objectID, LogLevel logLevel)
+        public static void Log(string message, LogType logType)
         {
-            if (logger != null && (Debug.logLevel & logLevel) != LogLevel.None)
-                logger.Log(message, StatefulWorld.Instance.Frame, objectID, logLevel);
+            if (logger != null && (Debug.logType & logType) != LogType.None)
+                logger.Log(message, logType);
+        }
+
+        public static void Log(string message, int objectID, LogType logType)
+        {
+            if (logger != null && (Debug.logType & logType) != LogType.None)
+                logger.Log(message, StatefulWorld.Instance.Frame, objectID, logType);
         }
     }
 }

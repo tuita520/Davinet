@@ -30,20 +30,15 @@ namespace Davinet
         private Role role;
 
         private PeerDebug debug;
+        private JitterBuffer jitterBuffer;
 
         public bool HasListenClient { get; set; }
 
-        public Peer() : this(null)
+        public Peer()
         {
-        }
-
-        public Peer(PeerDebug debug)
-        {
-            this.debug = debug;
-
             listener = new EventBasedNetListener();
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
-            listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;            
+            listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;
 
             netManager = new NetManager(listener);
             netManager.AutoRecycle = false;
@@ -57,6 +52,16 @@ namespace Davinet
             netDataWriter = new NetDataWriter();
 
             queuedStatePackets = new Queue<NetPacketReader>();
+        }
+
+        public Peer(JitterBuffer jitterBuffer) : this()
+        {
+            this.jitterBuffer = jitterBuffer;
+        }
+
+        public Peer(JitterBuffer jitterBuffer, PeerDebug debug) : this(jitterBuffer)
+        {
+            this.debug = debug;
         }
 
         // TODO: Would be nice if server specific logic lived somewhere else.
@@ -95,14 +100,7 @@ namespace Davinet
 
             if (packetType == PacketType.State)
             {
-                if (remote == null)
-                {
-                    queuedStatePackets.Enqueue(reader);
-                }
-                else
-                {
-                    ReadState(reader);
-                }
+                queuedStatePackets.Enqueue(reader);
             }
             // TODO: This is also server only logic.
             else if (packetType == PacketType.Join)
@@ -119,7 +117,7 @@ namespace Davinet
             }
         }
 
-        private void ReadState(NetPacketReader reader)
+        private void ProcessStatePacket(NetPacketReader reader, int currentFrame)
         {
             if (debug != null && debug.settings.simulateLatency)
             {
@@ -127,7 +125,20 @@ namespace Davinet
             }
             else
             {
-                remote.ReadState(reader);
+                ReadStatePacket(reader, currentFrame);
+            }
+        }
+
+        private void ReadStatePacket(NetPacketReader reader, int currentFrame)
+        {
+            if (jitterBuffer == null)
+            {
+                int frame = reader.GetInt();
+                remote.ReadState(reader, frame);
+            }
+            else
+            {
+                jitterBuffer.Insert(reader, currentFrame);
             }
         }
 
@@ -159,21 +170,30 @@ namespace Davinet
             role = listenClient ? Role.ListenClient : Role.Client;
         }
 
-        public void PollEvents()
+        public void PollEvents(int currentFrame)
         {
+            netManager.PollEvents();
+
             while (remote != null && queuedStatePackets.Count > 0)
             {
                 NetPacketReader reader = queuedStatePackets.Dequeue();
-                ReadState(reader);
+                ProcessStatePacket(reader, currentFrame);
             }
-
-            netManager.PollEvents();
 
             if (role != Role.ListenClient && debug != null && debug.settings.simulateLatency)
             {
                 foreach (NetPacketReader reader in debug.GetAllReadyReaders())
                 {
-                    remote.ReadState(reader);
+                    ReadStatePacket(reader, currentFrame);
+                }
+            }
+
+            if (jitterBuffer != null)
+            {
+                JitterBuffer.StatePacket packet;
+                if (jitterBuffer.TryGetPacket(out packet, currentFrame))
+                {
+                    remote.ReadState(packet.reader, packet.remoteFrame);
                 }
             }
         }

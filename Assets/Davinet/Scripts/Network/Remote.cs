@@ -205,10 +205,8 @@ namespace Davinet
         #endregion
 
         #region Read
-        public void ReadState(NetPacketReader reader)
+        public void ReadState(NetPacketReader reader, int frame)
         {
-            int frame = reader.GetInt();
-
             if (!arbiter && !listenRemote)
                 world.Frame = frame;
 

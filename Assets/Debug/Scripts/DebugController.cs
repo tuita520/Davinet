@@ -7,15 +7,21 @@ public class DebugController : MonoBehaviour
     StatefulObjectDebugView statefulObjectDebugViewPrefab;
 
     [SerializeField]
-    LogLevel logLevel;
+    bool generateStateObjectDebugViews;
+
+    [SerializeField]
+    Davinet.LogType logLevel;
 
     private void Start()
     {
-        if (logLevel != LogLevel.None)
+        if (logLevel != Davinet.LogType.None)
             Davinet.Debug.RegisterLogger(new UnityDavinetLogger(), logLevel);
 
-        StatefulWorld.Instance.OnInitialize += OnInitialize;
-        StatefulWorld.Instance.OnAdd += OnAdd;
+        if (generateStateObjectDebugViews)
+        {
+            StatefulWorld.Instance.OnInitialize += OnInitialize;
+            StatefulWorld.Instance.OnAdd += OnAdd;
+        }
     }
 
     private void OnInitialize()
