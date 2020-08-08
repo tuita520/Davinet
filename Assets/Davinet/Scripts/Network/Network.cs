@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Davinet
 {
@@ -9,6 +10,8 @@ namespace Davinet
 
         [SerializeField]
         int jitterBufferDelayFrames = 4;
+
+        public event Action<int> OnPlayerJoin;
 
         private void Awake()
         {
@@ -45,6 +48,8 @@ namespace Davinet
             server = new Peer(jitterBuffer, debug);
             server.OnReceivePeerId += OnReceivePeerId;
             server.Listen(port);
+
+            server.OnPeerConnected += Server_OnPeerConnected;
         }
 
         public void ConnectClient(string address, int port, PeerDebug.Settings debugSettings = null)
@@ -73,6 +78,11 @@ namespace Davinet
 
             if (server != null)
                 server.HasListenClient = true;
+        }
+
+        private void Server_OnPeerConnected(int id)
+        {
+            OnPlayerJoin?.Invoke(id);
         }
 
         private void OnReceivePeerId(int peerId)

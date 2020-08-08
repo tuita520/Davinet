@@ -13,6 +13,7 @@ namespace Davinet
     public class Peer
     {
         public event Action<int> OnReceivePeerId;
+        public event Action<int> OnPeerConnected;
 
         private Remote remote;
         private NetManager netManager;
@@ -78,20 +79,16 @@ namespace Davinet
 
             remote.SynchronizeAll();
 
-            // TODO: This should be part of the gameplay logic layer, since none of it is network specific.
-            // Instead, the gameplay layer should listen for when a player joins, and spawn an appropriate prefab.
-            var player = UnityEngine.Object.Instantiate(StatefulWorld.Instance.registeredPrefabsMap[1717083505]);
-            StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
-            player.GetComponent<OwnableObject>().GrantOwnership(id);
+            Debug.Log($"Peer <b>{peer.Id}</b> connected.", LogType.Connection);
 
-            UnityEngine.Debug.Log($"Peer {peer.Id} connected.");
+            OnPeerConnected?.Invoke(id);
         }
 
         private void Listener_ConnectionRequestEvent(ConnectionRequest request)
         {            
             request.Accept();
 
-            UnityEngine.Debug.Log($"Connection requested.");
+            Debug.Log($"Connection requested", LogType.Connection);
         }
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)

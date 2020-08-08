@@ -1,100 +1,102 @@
-﻿using Davinet;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class ThrowPower : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    float heightOffset = 2;
-
-    [SerializeField]
-    float throwVelocity = 10;
-
-    [SerializeField]
-    GameObject grabSphere;
-
-    private StateObjectReference heldObject { get; set; }
-
-    private PlayerInputController playerInputController;
-
-    private void Awake()
+    public class ThrowPower : MonoBehaviour
     {
-        heldObject = new StateObjectReference();
-        heldObject.OnChanged += HeldObject_OnChanged;
+        [SerializeField]
+        float heightOffset = 2;
 
-        grabSphere.transform.parent = null;
+        [SerializeField]
+        float throwVelocity = 10;
 
-        grabSphere.SetActive(false);
+        [SerializeField]
+        GameObject grabSphere;
 
-        playerInputController = GetComponent<PlayerInputController>();
-    }
+        private StateObjectReference heldObject { get; set; }
 
-    private void OnEnable()
-    {
-        grabSphere.transform.position = transform.position + Vector3.up * heightOffset;
-        grabSphere.SetActive(true);
-    }
+        private PlayerInputController playerInputController;
 
-    private void OnDisable()
-    {
-        if (grabSphere != null)
+        private void Awake()
+        {
+            heldObject = new StateObjectReference();
+            heldObject.OnChanged += HeldObject_OnChanged;
+
+            grabSphere.transform.parent = null;
+
             grabSphere.SetActive(false);
-    }
 
-    private void HeldObject_OnChanged(StatefulObject current, StatefulObject previous)
-    {
-        if (current != null)
-        {
-            current.GetComponent<Rigidbody>().isKinematic = true;
+            playerInputController = GetComponent<PlayerInputController>();
         }
 
-        if (previous != null)
+        private void OnEnable()
         {
-            previous.GetComponent<Rigidbody>().isKinematic = false;
-            previous.Ownable.RelinquishOwnership();
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        Vector3 grabPosition = transform.position + Vector3.up * heightOffset;
-        grabSphere.transform.position = grabPosition;
-
-        if (heldObject.Value != null)
-        {
-            heldObject.Value.GetComponent<Rigidbody>().position = grabPosition;
+            grabSphere.transform.position = transform.position + Vector3.up * heightOffset;
+            grabSphere.SetActive(true);
         }
 
-        if (playerInputController.CurrentInput.usePowerDown)
-            Use(playerInputController.CurrentInput.mouseRay);
-    }
-
-    private void Use(Ray ray)
-    {
-        if (heldObject.Value != null)
+        private void OnDisable()
         {
-            Plane plane = new Plane(Vector3.up, Vector3.zero);
+            if (grabSphere != null)
+                grabSphere.SetActive(false);
+        }
 
-            float d;
-            plane.Raycast(ray, out d);
-
-            if (d > 0)
+        private void HeldObject_OnChanged(StatefulObject current, StatefulObject previous)
+        {
+            if (current != null)
             {
-                Vector3 target = ray.origin + ray.direction * d;
-                Vector3 to = target - transform.position;
+                current.GetComponent<Rigidbody>().isKinematic = true;
+            }
 
-                heldObject.Value.GetComponent<Rigidbody>().velocity = to * throwVelocity;
-                heldObject.Value = null;
+            if (previous != null)
+            {
+                previous.GetComponent<Rigidbody>().isKinematic = false;
+                previous.Ownable.RelinquishOwnership();
             }
         }
-        else
-        {
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                StatefulObject stateful = hit.collider.GetComponentInParent<StatefulObject>();
 
-                if (stateful != null && stateful != GetComponent<StatefulObject>() && stateful.Ownable.TryTakeOwnership(GetComponent<OwnableObject>().Owner.Value)) 
-                    heldObject.Value = stateful;
+        private void FixedUpdate()
+        {
+            Vector3 grabPosition = transform.position + Vector3.up * heightOffset;
+            grabSphere.transform.position = grabPosition;
+
+            if (heldObject.Value != null)
+            {
+                heldObject.Value.GetComponent<Rigidbody>().position = grabPosition;
+            }
+
+            if (playerInputController.CurrentInput.usePowerDown)
+                Use(playerInputController.CurrentInput.mouseRay);
+        }
+
+        private void Use(Ray ray)
+        {
+            if (heldObject.Value != null)
+            {
+                Plane plane = new Plane(Vector3.up, Vector3.zero);
+
+                float d;
+                plane.Raycast(ray, out d);
+
+                if (d > 0)
+                {
+                    Vector3 target = ray.origin + ray.direction * d;
+                    Vector3 to = target - transform.position;
+
+                    heldObject.Value.GetComponent<Rigidbody>().velocity = to * throwVelocity;
+                    heldObject.Value = null;
+                }
+            }
+            else
+            {
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    StatefulObject stateful = hit.collider.GetComponentInParent<StatefulObject>();
+
+                    if (stateful != null && stateful != GetComponent<StatefulObject>() && stateful.Ownable.TryTakeOwnership(GetComponent<OwnableObject>().Owner.Value))
+                        heldObject.Value = stateful;
+                }
             }
         }
     }

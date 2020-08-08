@@ -1,50 +1,52 @@
-﻿using Davinet;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class ForcePower : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    float force = 10;
-
-    [SerializeField]
-    float radius = 4;
-
-    [SerializeField]
-    float upwardsModifier = 1;
-
-    [SerializeField]
-    GameObject art;
-
-    private Rigidbody rb;
-
-    private void Awake()
+    public class ForcePower : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
+        [SerializeField]
+        float force = 10;
 
-        art.SetActive(false);
-    }
+        [SerializeField]
+        float radius = 4;
 
-    private void OnEnable()
-    {
-        art.SetActive(true);
-    }
+        [SerializeField]
+        float upwardsModifier = 1;
 
-    private void OnDisable()
-    {
-        art.SetActive(false);
-    }
+        [SerializeField]
+        GameObject art;
 
-    private void OnTriggerStay(Collider other)
-    {
-        if (!enabled)
-            return;
+        private Rigidbody rb;
 
-        Rigidbody targetRb = other.GetComponentInParent<Rigidbody>();
-
-        if (targetRb != null)
+        private void Awake()
         {
-            targetRb.AddExplosionForce(force, rb.position, radius, upwardsModifier);
-            targetRb.GetComponent<StatefulObject>()?.Ownable.TryTakeAuthority(GetComponent<StatefulObject>().Ownable.Owner.Value);
+            rb = GetComponent<Rigidbody>();
+
+            art.SetActive(false);
+        }
+
+        private void OnEnable()
+        {
+            art.SetActive(true);
+        }
+
+        private void OnDisable()
+        {
+            art.SetActive(false);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (!enabled)
+                return;
+
+            Rigidbody targetRb = other.GetComponentInParent<Rigidbody>();
+
+            if (targetRb != null)
+            {
+                targetRb.AddExplosionForce(force, rb.position, radius, upwardsModifier);
+                targetRb.GetComponent<StatefulObject>()?.Ownable.TryTakeAuthority(GetComponent<StatefulObject>().Ownable.Owner.Value);
+            }
         }
     }
 }

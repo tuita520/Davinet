@@ -11,7 +11,8 @@ namespace Davinet
         Authority = 4,
         Ownership = 8,
         Spawn = 16,
-        Packet = 32
+        Packet = 32,
+        Connection = 64,
     }
 
     public static class Debug

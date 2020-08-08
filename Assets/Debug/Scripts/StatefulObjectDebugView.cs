@@ -1,37 +1,39 @@
-﻿using Davinet;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
-public class StatefulObjectDebugView : MonoBehaviour
+namespace Davinet.UnityDebug
 {
-    [SerializeField]
-    TextMeshPro text;
-
-    private StatefulObject statefulObject;
-
-    public void Initialize(StatefulObject statefulObject)
+    public class StatefulObjectDebugView : MonoBehaviour
     {
-        this.statefulObject = statefulObject;
-    }
+        [SerializeField]
+        TextMeshPro text;
 
-    private void LateUpdate()
-    {
-        transform.position = statefulObject.transform.position;
-    }
+        private StatefulObject statefulObject;
 
-    private void FixedUpdate()
-    {
-        string statefulText = $"ID: {statefulObject.ID}\n" +
-            $"Owner: { statefulObject.Ownable.Owner.Value}\n" +
-            $"Authority: {statefulObject.Ownable.Authority.Value}";
-
-        string output = statefulText;
-
-        if (statefulObject.TryGetComponent(out OwnableRigidbody ownableRigidbody))
+        public void Initialize(StatefulObject statefulObject)
         {
-            output += $"\nSleep: {ownableRigidbody.IsSleeping}";
+            this.statefulObject = statefulObject;
         }
 
-        text.text = output;
+        private void LateUpdate()
+        {
+            transform.position = statefulObject.transform.position;
+        }
+
+        private void FixedUpdate()
+        {
+            string statefulText = $"ID: {statefulObject.ID}\n" +
+                $"Owner: { statefulObject.Ownable.Owner.Value}\n" +
+                $"Authority: {statefulObject.Ownable.Authority.Value}";
+
+            string output = statefulText;
+
+            if (statefulObject.TryGetComponent(out Davinet.Sample.OwnableRigidbody ownableRigidbody))
+            {
+                output += $"\nSleep: {ownableRigidbody.IsSleeping}";
+            }
+
+            text.text = output;
+        }
     }
 }

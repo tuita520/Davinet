@@ -1,19 +1,22 @@
 ﻿using UnityEngine;
 
-public class Billboard : MonoBehaviour
+namespace Davinet.UnityDebug
 {
-    private void OnEnable()
+    public class Billboard : MonoBehaviour
     {
-        Camera.onPreRender += BillboardToCamera;
-    }
+        private void OnEnable()
+        {
+            Camera.onPreRender += BillboardToCamera;
+        }
 
-    private void OnDisable()
-    {
-        Camera.onPreRender -= BillboardToCamera;
-    }
+        private void OnDisable()
+        {
+            Camera.onPreRender -= BillboardToCamera;
+        }
 
-    private void BillboardToCamera(Camera cam)
-    {
-        transform.rotation = Quaternion.LookRotation(cam.transform.forward);
+        private void BillboardToCamera(Camera cam)
+        {
+            transform.rotation = Quaternion.LookRotation(cam.transform.forward);
+        }
     }
 }

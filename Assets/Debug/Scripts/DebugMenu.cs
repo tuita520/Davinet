@@ -2,32 +2,35 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DebugMenu : MonoBehaviour
+namespace Davinet.UnityDebug
 {
-    [SerializeField]
-    Text frameText;
-
-    [SerializeField]
-    Button buttonAssertStatefulObjectDictionary;
-
-    private void Awake()
+    public class DebugMenu : MonoBehaviour
     {
-        buttonAssertStatefulObjectDictionary.onClick.AddListener(() => AssertStatefulObjectDictionary());
-    }
+        [SerializeField]
+        Text frameText;
 
-    private void FixedUpdate()
-    {
-        frameText.text = $"Frame: {StatefulWorld.Instance.Frame}";
-    }
+        [SerializeField]
+        Button buttonAssertStatefulObjectDictionary;
 
-    private void AssertStatefulObjectDictionary()
-    {
-        foreach (var kvp in StatefulWorld.Instance.statefulObjects)
+        private void Awake()
         {
-            if (kvp.Key == kvp.Value.ID)
-                UnityEngine.Debug.Log("StatefulObject IDs correctly match their keyed ID.");
-            else
-                UnityEngine.Debug.LogError($"StatefulObject ID {kvp.Value.ID} is keyed on {kvp.Key}");
+            buttonAssertStatefulObjectDictionary.onClick.AddListener(() => AssertStatefulObjectDictionary());
+        }
+
+        private void FixedUpdate()
+        {
+            frameText.text = $"Frame: {StatefulWorld.Instance.Frame}";
+        }
+
+        private void AssertStatefulObjectDictionary()
+        {
+            foreach (var kvp in StatefulWorld.Instance.statefulObjects)
+            {
+                if (kvp.Key == kvp.Value.ID)
+                    UnityEngine.Debug.Log("StatefulObject IDs correctly match their keyed ID.");
+                else
+                    UnityEngine.Debug.LogError($"StatefulObject ID {kvp.Value.ID} is keyed on {kvp.Key}");
+            }
         }
     }
 }

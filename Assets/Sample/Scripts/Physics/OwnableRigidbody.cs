@@ -1,45 +1,47 @@
-﻿using Davinet;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class OwnableRigidbody : MonoBehaviour
+namespace Davinet.Sample
 {
-    private Rigidbody rb;
-    private OwnableObject ownable;
-
-    public bool IsSleeping;
-
-    private void Awake()
+    public class OwnableRigidbody : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
-        ownable = GetComponent<OwnableObject>();
+        private Rigidbody rb;
+        private OwnableObject ownable;
 
-        rb.sleepThreshold = 0.01f;
-    }    
+        public bool IsSleeping;
 
-    private void FixedUpdate()
-    {
-        if (!IsSleeping)
+        private void Awake()
         {
-            if (rb.IsSleeping())
+            rb = GetComponent<Rigidbody>();
+            ownable = GetComponent<OwnableObject>();
+
+            rb.sleepThreshold = 0.01f;
+        }
+
+        private void FixedUpdate()
+        {
+            if (!IsSleeping)
             {
-                ownable.RelinquishAuthority();
-                IsSleeping = true;
+                if (rb.IsSleeping())
+                {
+                    ownable.RelinquishAuthority();
+                    IsSleeping = true;
+                }
+            }
+            else
+            {
+                if (!rb.IsSleeping())
+                {
+                    IsSleeping = false;
+                }
             }
         }
-        else
-        {
-            if (!rb.IsSleeping())
-            {
-                IsSleeping = false;
-            }
-        }
-    }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.TryGetComponent(out OwnableObject targetOwnable))
+        private void OnCollisionEnter(Collision collision)
         {
-            targetOwnable.TryTakeAuthority(ownable.Authority.Value);
+            if (collision.gameObject.TryGetComponent(out OwnableObject targetOwnable))
+            {
+                targetOwnable.TryTakeAuthority(ownable.Authority.Value);
+            }
         }
     }
 }

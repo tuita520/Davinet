@@ -1,19 +1,22 @@
 ﻿using UnityEngine;
 
-public class RigidbodyDrag : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    float speed = 3;
-
-    private Rigidbody rb;
-
-    private void Awake()
+    public class RigidbodyDrag : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody>();
-    }
+        [SerializeField]
+        float speed = 3;
 
-    private void FixedUpdate()
-    {
-        rb.AddForce(GetComponent<PlayerInputController>().CurrentInput.moveInput * speed);
+        private Rigidbody rb;
+
+        private void Awake()
+        {
+            rb = GetComponent<Rigidbody>();
+        }
+
+        private void FixedUpdate()
+        {
+            rb.AddForce(GetComponent<PlayerInputController>().CurrentInput.moveInput * speed);
+        }
     }
 }

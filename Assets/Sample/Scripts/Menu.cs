@@ -2,62 +2,65 @@
 using UnityEngine.UI;
 using System;
 
-public class Menu : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    InputField address;
-
-    [SerializeField]
-    InputField port;
-
-    [SerializeField]
-    Toggle simulatePacketLoss;
-
-    [SerializeField]
-    Toggle simulateLatency;
-
-    [SerializeField]
-    InputField latencyMin;
-
-    [SerializeField]
-    InputField latencyMax;
-
-    [SerializeField]
-    Slider packetLossPercent;
-
-    public void StartServer()
+    public class Menu : MonoBehaviour
     {
-        Davinet.Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
+        [SerializeField]
+        InputField address;
 
-        Destroy(gameObject);
-    }
+        [SerializeField]
+        InputField port;
 
-    public void StartClient()
-    {
-        Davinet.Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text), NetworkDebug());
+        [SerializeField]
+        Toggle simulatePacketLoss;
 
-        Destroy(gameObject);
-    }
+        [SerializeField]
+        Toggle simulateLatency;
 
-    public void StartHost()
-    {
-        Davinet.Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
-        Davinet.Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text));
+        [SerializeField]
+        InputField latencyMin;
 
-        Destroy(gameObject);
-    }
+        [SerializeField]
+        InputField latencyMax;
 
-    private Davinet.PeerDebug.Settings NetworkDebug()
-    {
-        var debug = new Davinet.PeerDebug.Settings()
+        [SerializeField]
+        Slider packetLossPercent;
+
+        public void StartServer()
         {
-            simulateLatency = simulateLatency.isOn,
-            simulatePacketLoss = simulatePacketLoss.isOn,
-            maxLatency = Convert.ToInt32(latencyMax.text),
-            minLatency = Convert.ToInt32(latencyMin.text),
-            packetLossChance = Mathf.RoundToInt(packetLossPercent.value * 100)
-        };
+            Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
 
-        return debug;
+            Destroy(gameObject);
+        }
+
+        public void StartClient()
+        {
+            Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text), NetworkDebug());
+
+            Destroy(gameObject);
+        }
+
+        public void StartHost()
+        {
+            Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
+            Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text));
+
+            Destroy(gameObject);
+        }
+
+        private PeerDebug.Settings NetworkDebug()
+        {
+            var debug = new PeerDebug.Settings()
+            {
+                simulateLatency = simulateLatency.isOn,
+                simulatePacketLoss = simulatePacketLoss.isOn,
+                maxLatency = Convert.ToInt32(latencyMax.text),
+                minLatency = Convert.ToInt32(latencyMin.text),
+                packetLossChance = Mathf.RoundToInt(packetLossPercent.value * 100)
+            };
+
+            return debug;
+        }
     }
 }

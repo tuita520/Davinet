@@ -1,61 +1,64 @@
 ﻿using Davinet;
 using UnityEngine;
 
-public class OwnershipVisualizer : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    float authorityColorStrength = 0.5f;
-
-    private OwnableObject ownable;
-    private Renderer thisRenderer;
-
-    private Color defaultColor;
-
-    private void Awake()
+    public class OwnershipVisualizer : MonoBehaviour
     {
-        thisRenderer = GetComponent<Renderer>();
+        [SerializeField]
+        float authorityColorStrength = 0.5f;
 
-        defaultColor = thisRenderer.material.color;
-    }
+        private OwnableObject ownable;
+        private Renderer thisRenderer;
 
-    private void Start()
-    {
-        ownable = GetComponent<OwnableObject>();
-        ownable.Owner.OnChanged += OnOwnableChanged;
-        ownable.Authority.OnChanged += OnOwnableChanged;
-    }
+        private Color defaultColor;
 
-    private void OnOwnableChanged(int arg1, int arg2)
-    {
-        UpdateColor();
-    }
-
-    private void UpdateColor()
-    {
-        PlayerColor[] playerColors = FindObjectsOfType<PlayerColor>();
-
-        bool isClaimed = false;
-
-        foreach (PlayerColor playerColor in playerColors)
+        private void Awake()
         {
-            if (playerColor.GetComponent<OwnableObject>().Owner.Value == 0)
-                continue;
+            thisRenderer = GetComponent<Renderer>();
 
-            if (ownable.HasOwnership(playerColor.GetComponent<OwnableObject>().Owner.Value))
-            {
-                thisRenderer.material.color = playerColor.Col.Value;
-                isClaimed = true;
-                break;
-            }
-            else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value))
-            {
-                thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, authorityColorStrength);
-                isClaimed = true;
-                break;
-            }
+            defaultColor = thisRenderer.material.color;
         }
 
-        if (!isClaimed)
-            thisRenderer.material.color = defaultColor;
+        private void Start()
+        {
+            ownable = GetComponent<OwnableObject>();
+            ownable.Owner.OnChanged += OnOwnableChanged;
+            ownable.Authority.OnChanged += OnOwnableChanged;
+        }
+
+        private void OnOwnableChanged(int arg1, int arg2)
+        {
+            UpdateColor();
+        }
+
+        private void UpdateColor()
+        {
+            PlayerColor[] playerColors = FindObjectsOfType<PlayerColor>();
+
+            bool isClaimed = false;
+
+            foreach (PlayerColor playerColor in playerColors)
+            {
+                if (playerColor.GetComponent<OwnableObject>().Owner.Value == 0)
+                    continue;
+
+                if (ownable.HasOwnership(playerColor.GetComponent<OwnableObject>().Owner.Value))
+                {
+                    thisRenderer.material.color = playerColor.Col.Value;
+                    isClaimed = true;
+                    break;
+                }
+                else if (ownable.HasAuthority(playerColor.GetComponent<OwnableObject>().Owner.Value))
+                {
+                    thisRenderer.material.color = Color.Lerp(defaultColor, playerColor.Col.Value, authorityColorStrength);
+                    isClaimed = true;
+                    break;
+                }
+            }
+
+            if (!isClaimed)
+                thisRenderer.material.color = defaultColor;
+        }
     }
 }

@@ -1,12 +1,15 @@
 ﻿using UnityEngine;
 
-public class PhysicsController : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    float timestep = 0.01f;
-
-    private void Awake()
+    public class PhysicsController : MonoBehaviour
     {
-        Time.fixedDeltaTime = timestep;
+        [SerializeField]
+        float timestep = 0.01f;
+
+        private void Awake()
+        {
+            Time.fixedDeltaTime = timestep;
+        }
     }
 }

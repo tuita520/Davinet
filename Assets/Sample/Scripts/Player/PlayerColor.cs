@@ -1,31 +1,34 @@
 ﻿using UnityEngine;
 
-public class PlayerColor : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    Renderer art;
-
-    public StateColor Col { get; private set; }
-
-    private bool initialized;
-
-    private void Awake()
+    public class PlayerColor : MonoBehaviour
     {
-        Col = new StateColor();
-        Col.OnChanged += Col_OnChanged;
-    }
+        [SerializeField]
+        Renderer art;
 
-    public void Initialize(Color color)
-    {
-        Debug.Assert(initialized == false, "Attempting to initialize player color a second time.");
+        public StateColor Col { get; private set; }
 
-        initialized = true;
+        private bool initialized;
 
-        Col.Value = color;
-    }
+        private void Awake()
+        {
+            Col = new StateColor();
+            Col.OnChanged += Col_OnChanged;
+        }
 
-    private void Col_OnChanged(Color current, Color previous)
-    {
-        art.material.color = current;
+        public void Initialize(Color color)
+        {
+            UnityEngine.Debug.Assert(initialized == false, "Attempting to initialize player color a second time.");
+
+            initialized = true;
+
+            Col.Value = color;
+        }
+
+        private void Col_OnChanged(Color current, Color previous)
+        {
+            art.material.color = current;
+        }
     }
 }

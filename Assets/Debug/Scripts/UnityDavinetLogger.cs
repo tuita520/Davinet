@@ -1,4 +1,4 @@
-﻿namespace Davinet
+﻿namespace Davinet.UnityDebug
 {
     public class UnityDavinetLogger : ILogger
     {

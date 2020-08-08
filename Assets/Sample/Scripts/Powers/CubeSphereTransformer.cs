@@ -1,38 +1,41 @@
 ﻿using UnityEngine;
 
-public class CubeSphereTransformer : MonoBehaviour
+namespace Davinet.Sample
 {
-    [SerializeField]
-    GameObject cube;
-
-    [SerializeField]
-    GameObject sphere;
-
-    [SerializeField]
-    Animator animator;
-
-    private StateBool isCube { get; set; }
-
-    private PlayerInputController playerInputController;
-
-    private void Awake()
+    public class CubeSphereTransformer : MonoBehaviour
     {
-        isCube = new StateBool(true, IsCube_OnChanged);
+        [SerializeField]
+        GameObject cube;
 
-        playerInputController = GetComponent<PlayerInputController>();
-    }
+        [SerializeField]
+        GameObject sphere;
 
-    private void FixedUpdate()
-    {
-        if (playerInputController.CurrentInput.transformDown)
-            isCube.Value = !isCube.Value;
-    }
+        [SerializeField]
+        Animator animator;
 
-    private void IsCube_OnChanged(bool current, bool previous)
-    {
-        cube.SetActive(current);
-        sphere.SetActive(!current);
+        private StateBool isCube { get; set; }
 
-        animator.SetBool("IsCube", current);
+        private PlayerInputController playerInputController;
+
+        private void Awake()
+        {
+            isCube = new StateBool(true, IsCube_OnChanged);
+
+            playerInputController = GetComponent<PlayerInputController>();
+        }
+
+        private void FixedUpdate()
+        {
+            if (playerInputController.CurrentInput.transformDown)
+                isCube.Value = !isCube.Value;
+        }
+
+        private void IsCube_OnChanged(bool current, bool previous)
+        {
+            cube.SetActive(current);
+            sphere.SetActive(!current);
+
+            animator.SetBool("IsCube", current);
+        }
     }
 }
