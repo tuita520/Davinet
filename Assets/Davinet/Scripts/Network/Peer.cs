@@ -72,8 +72,11 @@ namespace Davinet
         {
             this.debug = debug;
 
-            netManager.SimulatePacketLoss = debug.settings.simulatePacketLoss;
-            netManager.SimulationPacketLossChance = debug.settings.packetLossChance;
+            if (debug != null)
+            {
+                netManager.SimulatePacketLoss = debug.settings.simulatePacketLoss;
+                netManager.SimulationPacketLossChance = debug.settings.packetLossChance;
+            }
         }
 
         // TODO: Would be nice if server specific logic lived somewhere else.
