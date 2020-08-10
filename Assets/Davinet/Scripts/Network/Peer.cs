@@ -153,7 +153,7 @@ namespace Davinet
         {
             if (settings.UseJitterBuffer)
             {
-                jitterBuffersByPeerId[packet.PeerID].Insert(packet.PacketReader, frame);
+                jitterBuffersByPeerId[packet.PeerID].Insert(packet.PacketReader);
             }
             else
             {
@@ -214,7 +214,7 @@ namespace Davinet
             {
                 foreach (JitterBuffer jitterBuffer in jitterBuffersByPeerId.Values)
                 {
-                    while (jitterBuffer.TryGetPacket(out JitterBuffer.StatePacket packet, frame))
+                    foreach (var packet in jitterBuffer.StepBuffer())
                     {
                         remote.ReadState(packet.reader, packet.remoteFrame, settings.DiscardOutOfOrderPackets);
                     }
