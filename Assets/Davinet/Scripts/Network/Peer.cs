@@ -12,6 +12,14 @@ namespace Davinet
     /// </summary>
     public class Peer
     {
+        [Serializable]
+        public class Settings
+        {
+            public bool DiscardOutOfOrderPackets;
+            public bool UseJitterBuffer;
+            public int JitterBufferDelayFrames;
+        }
+
         public event Action<int> OnReceivePeerId;
         public event Action<int> OnPeerConnected;
 
@@ -26,12 +34,13 @@ namespace Davinet
         /// initialization.
         /// </summary>
         private Queue<NetPacketReader> queuedStatePackets;
+        private Dictionary<int, NetPeer> peersByIndex;
 
         private enum Role { Inactive, Server, Client, ListenClient }
         private Role role;
 
+        private Settings settings;
         private PeerDebug debug;
-        private JitterBuffer jitterBuffer;
 
         public bool HasListenClient { get; set; }
 
@@ -51,16 +60,18 @@ namespace Davinet
             }
 
             netDataWriter = new NetDataWriter();
-
             queuedStatePackets = new Queue<NetPacketReader>();
+            peersByIndex = new Dictionary<int, NetPeer>();
+
+            settings = new Settings();
         }
 
-        public Peer(JitterBuffer jitterBuffer) : this()
+        public Peer(Settings settings) : this()
         {
-            this.jitterBuffer = jitterBuffer;
+            this.settings = settings;
         }
 
-        public Peer(JitterBuffer jitterBuffer, PeerDebug debug) : this(jitterBuffer)
+        public Peer(Settings settings, PeerDebug debug) : this(settings)
         {
             this.debug = debug;
         }
@@ -68,7 +79,8 @@ namespace Davinet
         // TODO: Would be nice if server specific logic lived somewhere else.
         private void Listener_PeerConnectedEvent(NetPeer peer)
         {
-            int id = remote.AddPeer(peer);
+            int id = peersByIndex.Count + 1;
+            peersByIndex[id] = peer;
 
             NetDataWriter writer = new NetDataWriter();
             writer.Put((byte)PacketType.Join);
@@ -128,15 +140,15 @@ namespace Davinet
 
         private void ReadStatePacket(NetPacketReader reader, int currentFrame)
         {
-            if (jitterBuffer == null)
-            {
+            //if (jitterBuffer == null)
+            //{
                 int frame = reader.GetInt();
-                remote.ReadState(reader, frame);
-            }
-            else
-            {
-                jitterBuffer.Insert(reader, currentFrame);
-            }
+                remote.ReadState(reader, frame, settings.DiscardOutOfOrderPackets);
+            //}
+            //else
+            //{
+            //    jitterBuffer.Insert(reader, currentFrame);
+            //}
         }
 
         public void Listen(int port)
@@ -185,14 +197,14 @@ namespace Davinet
                 }
             }
 
-            if (jitterBuffer != null)
-            {
-                JitterBuffer.StatePacket packet;
-                if (jitterBuffer.TryGetPacket(out packet, currentFrame))
-                {
-                    remote.ReadState(packet.reader, packet.remoteFrame);
-                }
-            }
+            //if (jitterBuffer != null)
+            //{
+            //    JitterBuffer.StatePacket packet;
+            //    if (jitterBuffer.TryGetPacket(out packet, currentFrame))
+            //    {
+            //        remote.ReadState(packet.reader, packet.remoteFrame);
+            //    }
+            //}
         }
 
         public void SendState()

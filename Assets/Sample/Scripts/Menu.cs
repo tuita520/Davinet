@@ -44,7 +44,7 @@ namespace Davinet.Sample
         public void StartHost()
         {
             Network.Instance.StartServer(Convert.ToInt32(port.text), NetworkDebug());
-            Network.Instance.ConnectClient(address.text, Convert.ToInt32(port.text));
+            Network.Instance.ConnectClient("localhost", Convert.ToInt32(port.text));
 
             Destroy(gameObject);
         }

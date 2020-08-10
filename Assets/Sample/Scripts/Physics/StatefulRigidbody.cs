@@ -53,9 +53,6 @@ namespace Davinet.Sample
             reader.GetVector3();
         }
 
-        public bool ShouldWrite()
-        {
-            return true;
-        }
+        public int LastReadFrame { get; set; } = -1;
     }
 }

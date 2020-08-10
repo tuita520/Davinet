@@ -1,4 +1,5 @@
-﻿using LiteNetLib.Utils;
+﻿using Davinet;
+using LiteNetLib.Utils;
 
 public abstract class StateField<T> : IStateField
 {
@@ -74,6 +75,8 @@ public abstract class StateField<T> : IStateField
     public abstract void Write(NetDataWriter writer);
     public abstract void Read(NetDataReader reader);
     public abstract void Pass(NetDataReader reader);
+
+    public int LastReadFrame { get; set; } = -1;
 
     public void SetWritable(bool value)
     {

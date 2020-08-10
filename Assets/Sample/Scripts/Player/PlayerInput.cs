@@ -55,5 +55,7 @@ namespace Davinet.Sample
             //writer.Put(mouseRay.origin);
             //writer.Put(mouseRay.direction);
         }
+
+        public int LastReadFrame { get; set; } = -1;
     }
 }

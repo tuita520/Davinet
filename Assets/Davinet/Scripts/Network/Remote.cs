@@ -14,18 +14,17 @@ namespace Davinet
         /// <summary>
         /// There is only one arbiter per session. The arbiter by default has ownership over all objects.
         /// </summary>
-        private bool arbiter;
+        private readonly bool arbiter;
 
         /// <summary>
         /// Listen remotes are clients that share their game instance (and stateful world) with the server.
         /// To avoid certain state updates from being applied twice (like spawning), they ignore some updates
         /// from the server.
         /// </summary>
-        private bool listenRemote;
+        private readonly bool listenRemote;
 
-        private int remoteID;
-        private Dictionary<int, NetPeer> peersByIndex;
-        private StatefulWorld world;
+        private readonly int remoteID;
+        private readonly StatefulWorld world;
 
         private bool writeAll;
 
@@ -47,7 +46,6 @@ namespace Davinet
             }
 
             objectsToSpawn = new Dictionary<int, IdentifiableObject>();
-            peersByIndex = new Dictionary<int, NetPeer>();
         }
 
         /// <summary>
@@ -63,14 +61,6 @@ namespace Davinet
             }
 
             writeAll = true;
-        }
-
-        public int AddPeer(NetPeer peer)
-        {
-            int id = peersByIndex.Count + 1;
-            peersByIndex[id] = peer;
-
-            return id;
         }
 
         private void StatefulWorld_OnAdd(StatefulObject obj)
@@ -205,9 +195,13 @@ namespace Davinet
         #endregion
 
         #region Read
-        public void ReadState(NetPacketReader reader, int frame)
+        public void ReadState(NetPacketReader reader, int frame, bool discardOutOfOrderPackets)
         {
-            if (!arbiter && !listenRemote)
+            Debug.Log($"Receiving packet with remote frame <b>{frame}</b> at local frame <b>{world.Frame}</b>", LogType.Packet);
+
+            // TODO: When should clients overwrite their existing frame with the remote's?
+            // Should they always use the latest?
+            if (frame > world.Frame && !arbiter && !listenRemote)
                 world.Frame = frame;
 
             int spawnsLength = reader.GetInt();
@@ -217,8 +211,8 @@ namespace Davinet
 
             ReadSpawns(reader, spawnsLength);
             ReadOwnership(reader, ownershipLength);
-            ReadStateful(reader, statefulsLength);
-            ReadFields(reader, fieldsLength);
+            ReadStateful(reader, statefulsLength, frame, discardOutOfOrderPackets);
+            ReadFields(reader, fieldsLength, frame, discardOutOfOrderPackets);
         }
 
         private void ReadOwnership(NetPacketReader reader, int length)
@@ -239,7 +233,7 @@ namespace Davinet
             }
         }
 
-        private void ReadStateful(NetPacketReader reader, int length)
+        private void ReadStateful(NetPacketReader reader, int length, int frame, bool discardOutOfOrderPackets)
         {
             if (listenRemote)
             {
@@ -254,13 +248,23 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 if (!world.GetStatefulObject(id).Ownable.HasAuthority(remoteID))
-                    world.statefulObjects[id].GetComponent<IStreamable>().Read(reader);
+                {
+                    if (world.statefulObjects[id].GetComponent<IStreamable>().LastReadFrame < frame || !discardOutOfOrderPackets)
+                    {
+                        world.statefulObjects[id].GetComponent<IStreamable>().Read(reader);
+                        world.statefulObjects[id].GetComponent<IStreamable>().LastReadFrame = frame;
+                    }
+                    else
+                    {
+                        world.statefulObjects[id].GetComponent<IStreamable>().Pass(reader);
+                    }
+                }
                 else
                     world.statefulObjects[id].GetComponent<IStreamable>().Pass(reader);
             }
         }
 
-        private void ReadFields(NetDataReader reader, int length)
+        private void ReadFields(NetDataReader reader, int length, int frame, bool discardOutOfOrderPackets)
         {
             if (listenRemote)
             {
@@ -280,9 +284,9 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 if (!world.statefulObjects[id].Ownable.HasAuthority(remoteID))
-                    world.statefulObjects[id].ReadStateFields(reader, arbiter);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, discardOutOfOrderPackets);
                 else
-                    world.statefulObjects[id].ReadStateFields(reader, arbiter, true);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, true);
             }
         }
 

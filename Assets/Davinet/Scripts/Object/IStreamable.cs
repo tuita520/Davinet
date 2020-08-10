@@ -12,5 +12,7 @@ namespace Davinet
         /// </summary>
         /// <param name="reader"></param>
         void Pass(NetDataReader reader);
+
+        int LastReadFrame { get; set; }
     }
 }

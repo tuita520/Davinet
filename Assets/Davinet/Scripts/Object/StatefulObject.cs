@@ -117,6 +117,8 @@ namespace Davinet
                         field.Write(writer);
 
                         field.IsDirty = false;
+
+                        Debug.Log($"Writing IStateField <b>{info.Name}</b>.", id, LogType.Property);
                     }
                 }
             }
@@ -129,7 +131,7 @@ namespace Davinet
         /// <param name="arbiter"></param>
         /// <param name="clear">When true, state fields changes will not be applied. This is useful if the local peer has
         /// authority over this object.</param>
-        public void ReadStateFields(NetDataReader reader, bool arbiter, bool clear=false)
+        public void ReadStateFields(NetDataReader reader, bool arbiter, int frame, bool discardOutOfOrderPackets, bool clear=false)
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
 
@@ -156,7 +158,13 @@ namespace Davinet
 
                     if (!clear)
                     {
-                        field.Read(reader);
+                        if (field.LastReadFrame < frame || !discardOutOfOrderPackets)
+                        {
+                            field.Read(reader);
+                            field.LastReadFrame = frame;
+                        }
+                        else
+                            field.Pass(reader);
 
                         // After the arbiter reads the fields, it is responsible to propagate these
                         // changes to all remotes. Non-arbiter remotes will mark them clean, so that if

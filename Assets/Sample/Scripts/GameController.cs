@@ -18,7 +18,7 @@ namespace Davinet.Sample
             StatefulWorld.Instance.Add(player.GetComponent<StatefulObject>());
             player.GetComponent<OwnableObject>().GrantOwnership(id);
 
-            UnityEngine.Debug.Log($"Spawning warrior for {id}.");
+            UnityEngine.Debug.Log($"Spawning player for {id}.");
         }
     }
 }

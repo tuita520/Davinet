@@ -6,10 +6,7 @@ namespace Davinet
     public class Network : SingletonBehaviour<Network>
     {
         [SerializeField]
-        bool useJitterBuffer;
-
-        [SerializeField]
-        int jitterBufferDelayFrames = 4;
+        Peer.Settings defaultPeerSettings;
 
         public event Action<int> OnPlayerJoin;
 
@@ -38,14 +35,7 @@ namespace Davinet
                 debug.Initialize(debugSettings);
             }
 
-            JitterBuffer jitterBuffer = null;
-
-            if (useJitterBuffer)
-            {
-                jitterBuffer = new JitterBuffer(jitterBufferDelayFrames);
-            }
-
-            server = new Peer(jitterBuffer, debug);
+            server = new Peer(defaultPeerSettings, debug);
             server.OnReceivePeerId += OnReceivePeerId;
             server.Listen(port);
 
@@ -65,14 +55,7 @@ namespace Davinet
                 debug.Initialize(debugSettings);
             }
 
-            JitterBuffer jitterBuffer = null;
-
-            if (useJitterBuffer && server == null)
-            {
-                jitterBuffer = new JitterBuffer(jitterBufferDelayFrames);
-            }
-
-            client = new Peer(jitterBuffer, debug);
+            client = new Peer(defaultPeerSettings, debug);
             client.OnReceivePeerId += OnReceivePeerId;
             client.Connect(address, port, server != null);
 
