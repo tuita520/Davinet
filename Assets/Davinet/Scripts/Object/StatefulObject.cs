@@ -131,7 +131,7 @@ namespace Davinet
         /// <param name="arbiter"></param>
         /// <param name="clear">When true, state fields changes will not be applied. This is useful if the local peer has
         /// authority over this object.</param>
-        public void ReadStateFields(NetDataReader reader, bool arbiter, int frame, bool discardOutOfOrderPackets, bool clear=false)
+        public void ReadStateFields(NetDataReader reader, bool arbiter, int frame, bool discardOutOfOrderPackets, bool clear)
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
 

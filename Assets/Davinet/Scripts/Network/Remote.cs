@@ -284,9 +284,9 @@ namespace Davinet
                 int id = reader.GetInt();
 
                 if (!world.statefulObjects[id].Ownable.HasAuthority(remoteID))
-                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, discardOutOfOrderPackets);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, discardOutOfOrderPackets, false);
                 else
-                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, true);
+                    world.statefulObjects[id].ReadStateFields(reader, arbiter, frame, discardOutOfOrderPackets, true);
             }
         }
 

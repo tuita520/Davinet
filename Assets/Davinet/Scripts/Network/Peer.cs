@@ -34,7 +34,8 @@ namespace Davinet
         /// initialization.
         /// </summary>
         private Queue<NetPacketReader> queuedStatePackets;
-        private Dictionary<int, NetPeer> peersByIndex;
+        private Dictionary<NetPeer, int> idsByPeers;
+        private Dictionary<int, JitterBuffer> jitterBuffersByPeerId;
 
         private enum Role { Inactive, Server, Client, ListenClient }
         private Role role;
@@ -53,15 +54,11 @@ namespace Davinet
             netManager = new NetManager(listener);
             netManager.AutoRecycle = false;
 
-            if (debug != null)
-            {
-                netManager.SimulatePacketLoss = debug.settings.simulatePacketLoss;
-                netManager.SimulationPacketLossChance = debug.settings.packetLossChance;
-            }
-
             netDataWriter = new NetDataWriter();
             queuedStatePackets = new Queue<NetPacketReader>();
-            peersByIndex = new Dictionary<int, NetPeer>();
+            idsByPeers = new Dictionary<NetPeer, int>();
+
+            jitterBuffersByPeerId = new Dictionary<int, JitterBuffer>();
 
             settings = new Settings();
         }
@@ -74,13 +71,17 @@ namespace Davinet
         public Peer(Settings settings, PeerDebug debug) : this(settings)
         {
             this.debug = debug;
+
+            netManager.SimulatePacketLoss = debug.settings.simulatePacketLoss;
+            netManager.SimulationPacketLossChance = debug.settings.packetLossChance;
         }
 
         // TODO: Would be nice if server specific logic lived somewhere else.
         private void Listener_PeerConnectedEvent(NetPeer peer)
         {
-            int id = peersByIndex.Count + 1;
-            peersByIndex[id] = peer;
+            int id = idsByPeers.Count + 1;
+            idsByPeers[peer] = id;
+            jitterBuffersByPeerId[id] = new JitterBuffer(settings.JitterBufferDelayFrames);
 
             NetDataWriter writer = new NetDataWriter();
             writer.Put((byte)PacketType.Join);
@@ -91,7 +92,7 @@ namespace Davinet
 
             remote.SynchronizeAll();
 
-            Debug.Log($"Peer <b>{peer.Id}</b> connected.", LogType.Connection);
+            Debug.Log($"Peer <b>{peer.Id}</b> connected. Assigned global ID {id}.", LogType.Connection);
 
             OnPeerConnected?.Invoke(id);
         }
@@ -196,6 +197,8 @@ namespace Davinet
                     ReadStatePacket(reader, currentFrame);
                 }
             }
+
+            // For each jitter buffer, dequeue any pending packets.
 
             //if (jitterBuffer != null)
             //{
