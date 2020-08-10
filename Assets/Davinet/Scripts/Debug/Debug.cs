@@ -13,6 +13,7 @@ namespace Davinet
         Spawn = 16,
         Packet = 32,
         Connection = 64,
+        JitterBuffer = 128
     }
 
     public static class Debug

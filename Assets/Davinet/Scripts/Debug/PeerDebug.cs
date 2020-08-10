@@ -20,35 +20,35 @@ namespace Davinet
 
         public Settings settings;
 
-        private List<System.Tuple<float, NetPacketReader>> delayedReaders;
+        private List<System.Tuple<float, Peer.StatePacket>> delayedPackets;
 
         public void Initialize(Settings settings)
         {
             this.settings = settings;
 
-            delayedReaders = new List<System.Tuple<float, NetPacketReader>>();
+            delayedPackets = new List<System.Tuple<float, Peer.StatePacket>>();
         }
 
-        public void InsertDelayedReader(float latency, NetPacketReader reader)
+        public void InsertDelayedReader(float latency, Peer.StatePacket packet)
         {
-            delayedReaders.Add(new System.Tuple<float, NetPacketReader>(Time.time + latency, reader));
+            delayedPackets.Add(new System.Tuple<float, Peer.StatePacket>(Time.time + latency, packet));
         }
 
-        public IEnumerable<NetPacketReader> GetAllReadyReaders()
+        public IEnumerable<Peer.StatePacket> GetAllReadyPackets()
         {
-            List<NetPacketReader> readyReaders = new List<NetPacketReader>();
+            List<Peer.StatePacket> readyPackets = new List<Peer.StatePacket>();
 
-            for (int i = 0; i < delayedReaders.Count; i++)
+            for (int i = 0; i < delayedPackets.Count; i++)
             {
-                if (Time.time >= delayedReaders[i].Item1)
+                if (Time.time >= delayedPackets[i].Item1)
                 {
-                    readyReaders.Add(delayedReaders[i].Item2);
-                    delayedReaders.RemoveAt(i);
+                    readyPackets.Add(delayedPackets[i].Item2);
+                    delayedPackets.RemoveAt(i);
                     i--;
                 }
             }
 
-            return readyReaders;
+            return readyPackets;
         }
 
         public void SendStateDelayed(NetDataWriter writer, NetManager manager, bool hasListenClient)

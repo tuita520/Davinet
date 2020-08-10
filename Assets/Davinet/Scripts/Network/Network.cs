@@ -78,10 +78,10 @@ namespace Davinet
             StatefulWorld.Instance.Frame++;
 
             if (server != null)
-                server.PollEvents(StatefulWorld.Instance.Frame);
+                server.PollEvents();
 
             if (client != null)
-                client.PollEvents(StatefulWorld.Instance.Frame);
+                client.PollEvents();
         }
 
         private void OnAfterFrame()

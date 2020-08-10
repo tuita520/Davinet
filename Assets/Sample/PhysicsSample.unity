@@ -14147,8 +14147,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultPeerSettings:
     DiscardOutOfOrderPackets: 0
-    UseJitterBuffer: 0
-    JitterBufferDelayFrames: 0
+    UseJitterBuffer: 1
+    JitterBufferDelayFrames: 3
 --- !u!4 &1040002766
 Transform:
   m_ObjectHideFlags: 0
@@ -14750,7 +14750,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81c767f3c08849b40bfaf91ca29c00ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timestep: 0.01
+  timestep: 1
 --- !u!4 &1080359430
 Transform:
   m_ObjectHideFlags: 0
@@ -30220,7 +30220,7 @@ PrefabInstance:
     - target: {fileID: 8589113510249810259, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35,
         type: 3}
       propertyPath: logLevel
-      value: 0
+      value: 192
       objectReference: {fileID: 0}
     - target: {fileID: 8589113510249810259, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35,
         type: 3}

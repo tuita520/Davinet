@@ -20,6 +20,12 @@ namespace Davinet
             public int JitterBufferDelayFrames;
         }
 
+        public class StatePacket
+        {
+            public int PeerID;
+            public NetPacketReader PacketReader;
+        }
+
         public event Action<int> OnReceivePeerId;
         public event Action<int> OnPeerConnected;
 
@@ -28,20 +34,21 @@ namespace Davinet
         private NetDataWriter netDataWriter;
         private EventBasedNetListener listener;
 
+        private int frame;
+
         /// <summary>
         /// If this peer receives any state updates before it has correctly
         /// initialized its remote, store them in a queue to apply them after
         /// initialization.
         /// </summary>
-        private Queue<NetPacketReader> queuedStatePackets;
-        private Dictionary<NetPeer, int> idsByPeers;
+        private Queue<StatePacket> queuedStatePackets;
         private Dictionary<int, JitterBuffer> jitterBuffersByPeerId;
 
         private enum Role { Inactive, Server, Client, ListenClient }
         private Role role;
 
-        private Settings settings;
-        private PeerDebug debug;
+        private readonly Settings settings;
+        private readonly PeerDebug debug;
 
         public bool HasListenClient { get; set; }
 
@@ -55,8 +62,7 @@ namespace Davinet
             netManager.AutoRecycle = false;
 
             netDataWriter = new NetDataWriter();
-            queuedStatePackets = new Queue<NetPacketReader>();
-            idsByPeers = new Dictionary<NetPeer, int>();
+            queuedStatePackets = new Queue<StatePacket>();
 
             jitterBuffersByPeerId = new Dictionary<int, JitterBuffer>();
 
@@ -82,8 +88,7 @@ namespace Davinet
         // TODO: Would be nice if server specific logic lived somewhere else.
         private void Listener_PeerConnectedEvent(NetPeer peer)
         {
-            int id = idsByPeers.Count + 1;
-            idsByPeers[peer] = id;
+            int id = peer.Id + 1;
             jitterBuffersByPeerId[id] = new JitterBuffer(settings.JitterBufferDelayFrames);
 
             NetDataWriter writer = new NetDataWriter();
@@ -95,7 +100,7 @@ namespace Davinet
 
             remote.SynchronizeAll();
 
-            Debug.Log($"Peer <b>{peer.Id}</b> connected. Assigned global ID {id}.", LogType.Connection);
+            Debug.Log($"Peer index <b>{peer.Id}</b> connected. Assigned global ID {id}.", LogType.Connection);
 
             OnPeerConnected?.Invoke(id);
         }
@@ -113,11 +118,13 @@ namespace Davinet
 
             if (packetType == PacketType.State)
             {
-                queuedStatePackets.Enqueue(reader);
+                queuedStatePackets.Enqueue(new StatePacket() { PacketReader = reader, PeerID = peer.Id + 1 });
             }
             // TODO: This is also server only logic.
             else if (packetType == PacketType.Join)
             {
+                jitterBuffersByPeerId[peer.Id + 1] = new JitterBuffer(settings.JitterBufferDelayFrames);
+
                 int remoteID = reader.GetInt();
                 OnReceivePeerId?.Invoke(remoteID);
 
@@ -126,33 +133,33 @@ namespace Davinet
                 StatefulWorld.Instance.Frame = frame;
                 remote = new Remote(StatefulWorld.Instance, false, role == Role.ListenClient, remoteID);
 
-                UnityEngine.Debug.Log($"Client assigned id {remoteID}");
+                Debug.Log($"Local client assigned id <b>{remoteID}</b>", LogType.Connection);
             }
         }
 
-        private void ProcessStatePacket(NetPacketReader reader, int currentFrame)
+        private void ProcessStatePacket(StatePacket packet)
         {
             if (debug != null && debug.settings.simulateLatency)
             {
-                debug.InsertDelayedReader(UnityEngine.Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, reader);
+                debug.InsertDelayedReader(UnityEngine.Random.Range(debug.settings.minLatency, debug.settings.maxLatency) / (float)1000, packet);
             }
             else
             {
-                ReadStatePacket(reader, currentFrame);
+                ReadStatePacket(packet);
             }
         }
 
-        private void ReadStatePacket(NetPacketReader reader, int currentFrame)
+        private void ReadStatePacket(StatePacket packet)
         {
-            //if (jitterBuffer == null)
-            //{
-                int frame = reader.GetInt();
-                remote.ReadState(reader, frame, settings.DiscardOutOfOrderPackets);
-            //}
-            //else
-            //{
-            //    jitterBuffer.Insert(reader, currentFrame);
-            //}
+            if (settings.UseJitterBuffer)
+            {
+                jitterBuffersByPeerId[packet.PeerID].Insert(packet.PacketReader, frame);
+            }
+            else
+            {
+                int frame = packet.PacketReader.GetInt();
+                remote.ReadState(packet.PacketReader, frame, settings.DiscardOutOfOrderPackets);
+            }
         }
 
         public void Listen(int port)
@@ -183,34 +190,36 @@ namespace Davinet
             role = listenClient ? Role.ListenClient : Role.Client;
         }
 
-        public void PollEvents(int currentFrame)
+        public void PollEvents()
         {
+            frame++;
+
             netManager.PollEvents();
 
             while (remote != null && queuedStatePackets.Count > 0)
             {
-                NetPacketReader reader = queuedStatePackets.Dequeue();
-                ProcessStatePacket(reader, currentFrame);
+                StatePacket packet = queuedStatePackets.Dequeue();
+                ProcessStatePacket(packet);
             }
 
             if (role != Role.ListenClient && debug != null && debug.settings.simulateLatency)
             {
-                foreach (NetPacketReader reader in debug.GetAllReadyReaders())
+                foreach (StatePacket packet in debug.GetAllReadyPackets())
                 {
-                    ReadStatePacket(reader, currentFrame);
+                    ReadStatePacket(packet);
                 }
             }
 
-            // For each jitter buffer, dequeue any pending packets.
-
-            //if (jitterBuffer != null)
-            //{
-            //    JitterBuffer.StatePacket packet;
-            //    if (jitterBuffer.TryGetPacket(out packet, currentFrame))
-            //    {
-            //        remote.ReadState(packet.reader, packet.remoteFrame);
-            //    }
-            //}
+            if (settings.UseJitterBuffer)
+            {
+                foreach (JitterBuffer jitterBuffer in jitterBuffersByPeerId.Values)
+                {
+                    while (jitterBuffer.TryGetPacket(out JitterBuffer.StatePacket packet, frame))
+                    {
+                        remote.ReadState(packet.reader, packet.remoteFrame, settings.DiscardOutOfOrderPackets);
+                    }
+                }
+            }
         }
 
         public void SendState()

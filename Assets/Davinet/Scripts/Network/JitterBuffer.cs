@@ -36,11 +36,6 @@ namespace Davinet
 
         public void Insert(NetPacketReader statePacketReader, int currentFrame)
         {
-            // TODO: What to do when the buffer gets too large, for any reason?
-            // Maybe fast forward and apply multiple per frame?
-            if (buffer.Count > 200)
-                return;
-
             int frame = statePacketReader.GetInt();
             
             StatePacket packet = new StatePacket()
@@ -50,7 +45,7 @@ namespace Davinet
                 reader = statePacketReader
             };
 
-            Debug.Log($"<color=yellow><b>Inserting</b></color> packet with remote frame <b>{packet.remoteFrame}</b> arriving at local frame <b>{packet.localArrivalFrame}</b> into jitter buffer.", LogType.Packet);
+            Debug.Log($"<color=yellow><b>Inserting</b></color> packet with remote frame <b>{packet.remoteFrame}</b> arriving at local frame <b>{packet.localArrivalFrame}</b> into jitter buffer.", LogType.JitterBuffer);
 
             // Iterate through the buffer to determine where the new packet should be placed.
             for (int i = 0; i < buffer.Count + 1; i++)
@@ -77,17 +72,26 @@ namespace Davinet
 
         public bool TryGetPacket(out StatePacket packet, int currentFrame)
         {
+            // If the buffer is too large, it is better to flush many packets all at once
+            // to catch up to the sender. This will cause popping, but is preferable to perpetually
+            // lagging behind.
+            //if (buffer.Count > delayFrames * 2)
+            //{
+            //    packet = buffer[buffer.Count - 1];
+            //    buffer.RemoveAt(buffer.Count - 1);
+
+            //    Debug.Log($"Buffer is size {buffer.Count}; <b><color=orange>Flushing</color></b> packet at frame <b>{currentFrame}</b> with remote frame <b>{packet.remoteFrame}</b> arriving locally at <b>{packet.localArrivalFrame}</b> from jitter buffer.", LogType.JitterBuffer);
+
+            //    return true;
+            //}
+
             if (buffer.Count > 0 && currentFrame - buffer[buffer.Count - 1].localArrivalFrame >= delayFrames)
             {
                 packet = buffer[buffer.Count - 1];
                 buffer.RemoveAt(buffer.Count - 1);
 
-                foreach (StatePacket p in buffer)
-                {
-                    p.localArrivalFrame -= currentFrame - packet.remoteFrame;
-                }
-
-                Debug.Log($"<b><color=cyan>Removing</color></b> packet at frame <b>{currentFrame}</b> with remote frame <b>{packet.remoteFrame}</b> arriving at {packet.localArrivalFrame} from jitter buffer.", LogType.Packet);
+                Debug.Log($"<b><color=cyan>Removing</color></b> packet at frame <b>{currentFrame}</b> with remote frame <b>{packet.remoteFrame}</b> arriving locally at <b>{packet.localArrivalFrame}</b> from jitter buffer. " +
+                    $"<i>(Buffer is now size {buffer.Count}.)</i>", LogType.JitterBuffer);
 
                 return true;
             }
