@@ -7,23 +7,21 @@ namespace Davinet.Sample
         [SerializeField]
         Renderer art;
 
-        public StateColor Col { get; private set; }
+        public StatefulEvent<StateColor> InitializeEvent;
 
-        private bool initialized;
+        public StateColor Col { get; private set; }
 
         private void Awake()
         {
+            InitializeEvent = new StatefulEvent<StateColor>(Initialize);
+
             Col = new StateColor();
             Col.OnChanged += Col_OnChanged;
         }
 
-        public void Initialize(Color color)
+        public void Initialize(StateColor color)
         {
-            UnityEngine.Debug.Assert(initialized == false, "Attempting to initialize player color a second time.");
-
-            initialized = true;
-
-            Col.Value = color;
+            Col.Value = color.Value;
         }
 
         private void Col_OnChanged(Color current, Color previous)

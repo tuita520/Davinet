@@ -14146,9 +14146,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultPeerSettings:
-    DiscardOutOfOrderPackets: 0
+    DiscardOutOfOrderPackets: 1
     UseJitterBuffer: 1
-    JitterBufferDelayFrames: 4
+    JitterBufferDelayFrames: 10
 --- !u!4 &1040002766
 Transform:
   m_ObjectHideFlags: 0
@@ -27734,7 +27734,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1966119575
 Transform:
   m_ObjectHideFlags: 0
