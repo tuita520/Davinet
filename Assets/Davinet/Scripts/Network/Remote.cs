@@ -82,72 +82,22 @@ namespace Davinet
 
         public void WriteState(NetDataWriter writer)
         {
-            // TODO: This packet structure requires lots of hard coding, making it not
-            // very error resistent. Should either find a better structure, or encapsulate
-            // common functionality.
             writer.Put((byte)PacketType.State);
             writer.Put(world.Frame);
 
-            int offset = sizeof(byte) + sizeof(int);
+            HeaderPacket headerPacket = new HeaderPacket(4, writer);
 
-            // Reserve positions for the length of the data for spawns, ownership, statefuls, 
-            // and fields (in order).
-            writer.Put(0);
-            writer.Put(0);
-            writer.Put(0);
-            writer.Put(0);
-            //writer.Put(0);
-
-            int beforeLength = writer.Length;
             WriteSpawns(writer);
-            int spawnsLength = writer.Length - beforeLength;
+            headerPacket.WriteCurrentDataSizeToHeader();
 
-            beforeLength = writer.Length;
             WriteOwnership(writer);
-            int ownershipLength = writer.Length - beforeLength;
+            headerPacket.WriteCurrentDataSizeToHeader();
 
-            beforeLength = writer.Length;
             WriteStateful(writer);
-            int statefulLength = writer.Length - beforeLength;
+            headerPacket.WriteCurrentDataSizeToHeader();
 
-            //beforeLength = writer.Length;
-            //WriteEvents(writer);
-            //int eventsLength = writer.Length - beforeLength;
-
-            beforeLength = writer.Length;
             WriteFields(writer);
-            int fieldsLength = writer.Length - beforeLength;
-
-            // Set the values of the reserved positions.
-            byte[] spawnsBytes = System.BitConverter.GetBytes(spawnsLength);
-            writer.Data[offset + 0] = spawnsBytes[0];
-            writer.Data[offset + 1] = spawnsBytes[1];
-            writer.Data[offset + 2] = spawnsBytes[2];
-            writer.Data[offset + 3] = spawnsBytes[3];
-
-            byte[] ownershipBytes = System.BitConverter.GetBytes(ownershipLength);
-            writer.Data[offset + 4] = ownershipBytes[0];
-            writer.Data[offset + 5] = ownershipBytes[1];
-            writer.Data[offset + 6] = ownershipBytes[2];
-            writer.Data[offset + 7] = ownershipBytes[3];
-
-            byte[] statefulBytes = System.BitConverter.GetBytes(statefulLength);
-            writer.Data[offset + 8] = statefulBytes[0];
-            writer.Data[offset + 9] = statefulBytes[1];
-            writer.Data[offset + 10] = statefulBytes[2];
-            writer.Data[offset + 11] = statefulBytes[3];
-
-            byte[] fieldsBytes = System.BitConverter.GetBytes(fieldsLength);
-            writer.Data[offset + 12] = fieldsBytes[0];
-            writer.Data[offset + 13] = fieldsBytes[1];
-            writer.Data[offset + 14] = fieldsBytes[2];
-            writer.Data[offset + 15] = fieldsBytes[3];
-
-            //byte[] fieldsBytes = System.BitConverter.GetBytes(fieldsLength);
-            //writer.Data[offset + 16] = fieldsBytes[0];
-            //writer.Data[offset + 17] = fieldsBytes[1];
-            //writer.Data[offset + 18] = fieldsBytes[2];
-            //writer.Data[offset + 19] = fieldsBytes[3];
+            headerPacket.WriteCurrentDataSizeToHeader();
 
             writeAll = false;
         }
