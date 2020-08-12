@@ -13,7 +13,8 @@ namespace Davinet
         Spawn = 16,
         Packet = 32,
         Connection = 64,
-        JitterBuffer = 128
+        JitterBuffer = 128,
+        Event = 256
     }
 
     public static class Debug
@@ -37,6 +38,12 @@ namespace Davinet
         {
             if (logger != null && (Debug.logType & logType) != LogType.None)
                 logger.Log(message, StatefulWorld.Instance.Frame, objectID, logType);
+        }
+
+        public static void LogError(string message)
+        {
+            if (logger != null && Debug.logType != LogType.None)
+                logger.LogError(message);
         }
     }
 }

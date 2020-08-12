@@ -7,13 +7,14 @@ using System;
 namespace Davinet
 {
     [RequireComponent(typeof(OwnableObject))]
-    public class StatefulObject : MonoBehaviour
+    public class StatefulObject : MonoBehaviour, IAuthorityControllable
     {
         public int ID { get; set; }
         public OwnableObject Ownable { get; private set; }
 
         // TODO: Should the StatefulObject just be an IStateField of the world?
         public bool IsDirty { get; set; } = true;
+        public bool HasControl { get; set; } = true;
 
         public enum DataType
         {
@@ -24,12 +25,14 @@ namespace Davinet
 
         // TODO: Maybe make this a custom data type for ease of use?
         private List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>> stateFieldsByMonoBehaviour;
+        private List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>> stateEventsByMonoBehaviour;
 
         private void Awake()
         {
             Ownable = GetComponent<OwnableObject>();
 
             stateFieldsByMonoBehaviour = new List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>>();
+            stateEventsByMonoBehaviour = new List<KeyValuePair<MonoBehaviour, List<PropertyInfo>>>();
 
             MonoBehaviour[] monoBehaviours = GetComponentsInChildren<MonoBehaviour>();
 
@@ -38,7 +41,8 @@ namespace Davinet
                 if (monoBehaviour is OwnableObject)
                     continue;
 
-                List<PropertyInfo> propertyInfos = null;
+                List<PropertyInfo> stateFieldPropertyInfos = null;
+                List<PropertyInfo> stateEventPropertyInfos = null;
 
                 Type type = monoBehaviour.GetType();
 
@@ -47,20 +51,33 @@ namespace Davinet
                 {
                     if (typeof(IStateField).IsAssignableFrom(propertyInfo.PropertyType))
                     {
-                        if (propertyInfos == null)
-                            propertyInfos = new List<PropertyInfo>();
+                        if (stateFieldPropertyInfos == null)
+                            stateFieldPropertyInfos = new List<PropertyInfo>();
 
-                        propertyInfos.Add(propertyInfo);
+                        stateFieldPropertyInfos.Add(propertyInfo);
+                    }
+
+                    if (typeof(StatefulEventBase).IsAssignableFrom(propertyInfo.PropertyType))
+                    {
+                        if (stateEventPropertyInfos == null)
+                            stateEventPropertyInfos = new List<PropertyInfo>();
+
+                        stateEventPropertyInfos.Add(propertyInfo);
                     }
                 }
 
-                if (propertyInfos != null)
-                    stateFieldsByMonoBehaviour.Add(new KeyValuePair<MonoBehaviour, List<PropertyInfo>>(monoBehaviour, propertyInfos));
+                if (stateFieldPropertyInfos != null)
+                    stateFieldsByMonoBehaviour.Add(new KeyValuePair<MonoBehaviour, List<PropertyInfo>>(monoBehaviour, stateFieldPropertyInfos));
+
+                if (stateEventPropertyInfos != null)
+                    stateEventsByMonoBehaviour.Add(new KeyValuePair<MonoBehaviour, List<PropertyInfo>>(monoBehaviour, stateEventPropertyInfos));
             }
         }
 
-        public void SetFieldsWritable(bool value)
+        public void SetControl(bool value)
         {
+            HasControl = value;
+
             for (int i = 0; i < stateFieldsByMonoBehaviour.Count; i++)
             {
                 var kvp = stateFieldsByMonoBehaviour[i];
@@ -70,11 +87,25 @@ namespace Davinet
                     PropertyInfo info = kvp.Value[j];
 
                     IStateField field = (IStateField)info.GetValue(kvp.Key);
-                    field.SetWritable(value);
+                    field.HasControl = value;
+                }
+            }
+
+            for (int i = 0; i < stateEventsByMonoBehaviour.Count; i++)
+            {
+                var kvp = stateEventsByMonoBehaviour[i];
+
+                for (int j = 0; j < kvp.Value.Count; j++)
+                {
+                    PropertyInfo info = kvp.Value[j];
+
+                    StatefulEventBase statefulEvent = (StatefulEventBase)info.GetValue(kvp.Key);
+                    statefulEvent.HasControl = value;
                 }
             }
         }
 
+        #region StateFields
         public void WriteStateFields(NetDataWriter writer, int id, bool writeEvenIfNotDirty=false)
         {
             bool objectHeaderWritten, behaviourHeaderWritten;
@@ -179,5 +210,88 @@ namespace Davinet
                 }
             }
         }
+        #endregion
+
+        // TODO: Much of this code is duplicated from the StateField functionality;
+        // this should be consolidated somewhere.
+        #region StateEvents
+        public void WriteEvents(NetDataWriter writer, int id)
+        {
+            bool objectHeaderWritten, behaviourHeaderWritten;
+
+            objectHeaderWritten = false;
+
+            for (int i = 0; i < stateEventsByMonoBehaviour.Count; i++)
+            {
+                behaviourHeaderWritten = false;
+
+                var kvp = stateEventsByMonoBehaviour[i];
+
+                for (int j = 0; j < kvp.Value.Count; j++)
+                {
+                    PropertyInfo info = kvp.Value[j];
+
+                    StatefulEventBase statefulEvent = (StatefulEventBase)info.GetValue(kvp.Key);
+
+                    if (statefulEvent.HasPendingCall)
+                    {
+                        // If this is the first field written for this object,
+                        // we need to write in this object's ID.
+                        if (!objectHeaderWritten)
+                        {
+                            writer.Put((byte)DataType.Object);
+                            writer.Put(id);
+                            objectHeaderWritten = true;
+                        }
+
+                        // Same as above, but per-behaviour.
+                        if (!behaviourHeaderWritten)
+                        {
+                            writer.Put((byte)DataType.Behaviour);
+                            writer.Put(i);
+                            behaviourHeaderWritten = true;
+                        }
+
+                        // TODO: DataType.Field should be renamed to be more general.
+                        writer.Put((byte)DataType.Field);
+                        writer.Put(j);
+                        statefulEvent.Write(writer);
+                        statefulEvent.HasPendingCall = false;
+
+                        Debug.Log($"Writing StatefulEvent <b>{info.Name}</b>.", id, LogType.Event);
+                    }
+                }
+            }
+        }
+
+        public void ReadEvents(NetDataReader reader)
+        {
+            KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
+
+            // TODO: This while should no longer be necessary?
+            while (!reader.EndOfData)
+            {
+                DataType datatype = (DataType)reader.GetByte();
+
+                // We have read all of the fields for every behaviour
+                // on this object.
+                if (datatype == DataType.Object)
+                {
+                    return;
+                }
+                else if (datatype == DataType.Behaviour)
+                {
+                    int behaviourIndex = reader.GetInt();
+                    selectedBehaviour = stateEventsByMonoBehaviour[behaviourIndex];
+                }
+                else if (datatype == DataType.Field)
+                {
+                    int eventIndex = reader.GetInt();
+                    StatefulEventBase statefulEvent = (StatefulEventBase)selectedBehaviour.Value[eventIndex].GetValue(selectedBehaviour.Key);                 
+                    statefulEvent.Read(reader);
+                }
+            }
+        }
+        #endregion
     }
 }

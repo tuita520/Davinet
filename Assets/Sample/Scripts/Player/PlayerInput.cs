@@ -41,10 +41,7 @@ namespace Davinet.Sample
             //mouseRay.direction = reader.GetVector3();
         }
 
-        public void SetWritable(bool value)
-        {
-            // Do nothing...for now!
-        }
+        public bool HasControl { get; set; }
 
         public void Write(NetDataWriter writer)
         {

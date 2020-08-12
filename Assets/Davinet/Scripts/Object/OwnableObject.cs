@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace Davinet
 {
-    // TODO: Ownership system (distributed authority scheme) is not currently
-	// functioning correctly.
-	// 1. Has issues when running a listen client (likely caused by
-	// the server and client performing different actions when they receive 
-	// ownership data.
-	// 2. Authority is sometimes not correctly relinquished or transferred
-	// between objects in latency situations.
     /// <summary>
     /// Peers on the network may have authority over an object,
     /// or own the object, which by default also gives them authority.

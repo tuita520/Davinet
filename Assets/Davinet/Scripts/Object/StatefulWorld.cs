@@ -74,7 +74,7 @@ namespace Davinet
 
         private void Ownable_OnAuthorityChanged(OwnableObject o, int authority)
         {
-            o.GetComponent<StatefulObject>().SetFieldsWritable(authorityArbiter.CanWrite(authority));
+            o.GetComponent<StatefulObject>().SetControl(authorityArbiter.CanWrite(authority));
         }
 
         public StatefulObject GetStatefulObject(int id)

@@ -1,4 +1,4 @@
-﻿public interface IAuthorityField
+﻿public interface IAuthorityControllable
 {
-    void SetWritable(bool value);
+    bool HasControl { get; set; }
 }

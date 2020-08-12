@@ -13,7 +13,7 @@ public abstract class StateField<T> : IStateField
     /// </summary>
     public StateField()
     {
-        writable = true;
+        HasControl = true;
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public abstract class StateField<T> : IStateField
 
         set
         {
-            if (!writable)
+            if (!HasControl)
                 return;
 
             Set(value);
@@ -69,16 +69,11 @@ public abstract class StateField<T> : IStateField
     public bool IsDirty { get; set; }
 
     private T value;
-    private bool writable;
 
     public abstract void Write(NetDataWriter writer);
     public abstract void Read(NetDataReader reader);
     public abstract void Pass(NetDataReader reader);
 
     public int LastReadFrame { get; set; } = -1;
-
-    public void SetWritable(bool value)
-    {
-        writable = value;
-    }
+    public bool HasControl { get; set; }
 }

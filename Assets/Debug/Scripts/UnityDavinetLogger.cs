@@ -11,5 +11,10 @@
         {
             UnityEngine.Debug.Log($"{frame} ID: <b><color=blue>{objectID}</color></b> <b>{logLevel}</b>: {message}");
         }
+
+        public void LogError(string message)
+        {
+            UnityEngine.Debug.LogError(message);
+        }
     }
 }

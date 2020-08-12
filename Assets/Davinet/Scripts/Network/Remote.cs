@@ -96,6 +96,7 @@ namespace Davinet
             writer.Put(0);
             writer.Put(0);
             writer.Put(0);
+            //writer.Put(0);
 
             int beforeLength = writer.Length;
             WriteSpawns(writer);
@@ -108,6 +109,10 @@ namespace Davinet
             beforeLength = writer.Length;
             WriteStateful(writer);
             int statefulLength = writer.Length - beforeLength;
+
+            //beforeLength = writer.Length;
+            //WriteEvents(writer);
+            //int eventsLength = writer.Length - beforeLength;
 
             beforeLength = writer.Length;
             WriteFields(writer);
@@ -137,6 +142,12 @@ namespace Davinet
             writer.Data[offset + 13] = fieldsBytes[1];
             writer.Data[offset + 14] = fieldsBytes[2];
             writer.Data[offset + 15] = fieldsBytes[3];
+
+            //byte[] fieldsBytes = System.BitConverter.GetBytes(fieldsLength);
+            //writer.Data[offset + 16] = fieldsBytes[0];
+            //writer.Data[offset + 17] = fieldsBytes[1];
+            //writer.Data[offset + 18] = fieldsBytes[2];
+            //writer.Data[offset + 19] = fieldsBytes[3];
 
             writeAll = false;
         }
@@ -192,6 +203,17 @@ namespace Davinet
                 kvp.Value.GetComponent<OwnableObject>().Write(writer, kvp.Key, arbiter, writeAll);
             }
         }
+
+        private void WriteEvents(NetDataWriter writer)
+        {
+            foreach (var kvp in world.statefulObjects)
+            {
+                if (!kvp.Value.Ownable.HasAuthority(remoteID))
+                {
+                    kvp.Value.WriteEvents(writer, kvp.Key);
+                }
+            }
+        }
         #endregion
 
         #region Read
@@ -208,11 +230,16 @@ namespace Davinet
             int ownershipLength = reader.GetInt();
             int statefulsLength = reader.GetInt();
             int fieldsLength = reader.GetInt();
+            //int eventsLength = reader.GetInt();
 
             ReadSpawns(reader, spawnsLength);
             ReadOwnership(reader, ownershipLength);
             ReadStateful(reader, statefulsLength, frame, discardOutOfOrderPackets);
+            //ReadEvents(reader, eventsLength);
             ReadFields(reader, fieldsLength, frame, discardOutOfOrderPackets);
+
+            if (!reader.EndOfData)
+                Debug.LogError($"ReadState method did not read all bytes from the NetPacketReader; it is intended to always consume all bytes, regardless of whether the data is applied to the StatefulWorld.");
         }
 
         private void ReadOwnership(NetPacketReader reader, int length)
@@ -313,6 +340,22 @@ namespace Davinet
                     clone.GetComponent<StatefulObject>().IsDirty = false;
                     world.Add(clone.GetComponent<StatefulObject>(), id);
                 }
+            }
+        }
+
+        private void ReadEvents(NetDataReader reader, int length)
+        {
+            int startPosition = reader.Position;
+
+            // Clear the first byte of the payload. This will be
+            // a StatefulObject.DataType.Object enum.
+            if (reader.Position - startPosition < length)
+                reader.GetByte();
+
+            while (reader.Position - startPosition < length)
+            {
+                int id = reader.GetInt();
+                world.statefulObjects[id].ReadEvents(reader);
             }
         }
         #endregion

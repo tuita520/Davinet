@@ -34,8 +34,6 @@ namespace Davinet
         private NetDataWriter netDataWriter;
         private EventBasedNetListener listener;
 
-        private int frame;
-
         /// <summary>
         /// If this peer receives any state updates before it has correctly
         /// initialized its remote, store them in a queue to apply them after
@@ -192,8 +190,6 @@ namespace Davinet
 
         public void PollEvents()
         {
-            frame++;
-
             netManager.PollEvents();
 
             while (remote != null && queuedStatePackets.Count > 0)

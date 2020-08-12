@@ -80,9 +80,6 @@ namespace Davinet.Sample
             {
                 FindObjectOfType<SmoothFollowCamera>().target = transform;
                 FindObjectOfType<SmoothFollowCamera>().enabled = true;
-
-                // TODO: Player specific information should be managed elsewhere.
-                GetComponent<PlayerColor>().Initialize(new StateColor(Color.HSVToRGB(Random.Range(0f, 1f), 1, 1)));
             }
 
             poll = value;

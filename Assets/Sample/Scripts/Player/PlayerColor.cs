@@ -7,19 +7,18 @@ namespace Davinet.Sample
         [SerializeField]
         Renderer art;
 
-        public StatefulEvent<StateColor> InitializeEvent;
-
+        public StatefulEvent<StateColor> Initialize { get; private set; }
         public StateColor Col { get; private set; }
 
         private void Awake()
         {
-            InitializeEvent = new StatefulEvent<StateColor>(Initialize);
+            Initialize = new StatefulEvent<StateColor>(InitializeCallback);
 
             Col = new StateColor();
             Col.OnChanged += Col_OnChanged;
         }
 
-        public void Initialize(StateColor color)
+        private void InitializeCallback(StateColor color)
         {
             Col.Value = color.Value;
         }
