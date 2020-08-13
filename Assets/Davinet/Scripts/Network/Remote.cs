@@ -308,7 +308,7 @@ namespace Davinet
             while (reader.Position - startPosition < length)
             {
                 int id = reader.GetInt();
-                world.statefulObjects[id].ReadEvents(reader);
+                world.statefulObjects[id].ReadEvents(reader, arbiter);
             }
         }
         #endregion

@@ -69,14 +69,7 @@ namespace Davinet
             pendingCall = new IStateField[] { arg };
 
             if (HasControl)
-            {
                 Execute(pendingCall);
-                HasPendingCall = false;
-            }
-            else
-            {
-                HasPendingCall = true;
-            }
         }
 
         public override void Pass(NetDataReader reader)

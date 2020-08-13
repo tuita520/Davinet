@@ -264,7 +264,7 @@ namespace Davinet
             }
         }
 
-        public void ReadEvents(NetDataReader reader)
+        public void ReadEvents(NetDataReader reader, bool arbiter)
         {
             KeyValuePair<MonoBehaviour, List<PropertyInfo>> selectedBehaviour = default;
 
@@ -289,6 +289,11 @@ namespace Davinet
                     int eventIndex = reader.GetInt();
                     StatefulEventBase statefulEvent = (StatefulEventBase)selectedBehaviour.Value[eventIndex].GetValue(selectedBehaviour.Key);                 
                     statefulEvent.Read(reader);
+
+                    if (statefulEvent.HasControl)
+                    {
+                        statefulEvent.HasPendingCall = false;
+                    }
                 }
             }
         }

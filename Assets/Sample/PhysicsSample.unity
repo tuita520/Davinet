@@ -14750,7 +14750,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81c767f3c08849b40bfaf91ca29c00ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timestep: 0.1
+  timestep: 0.01
 --- !u!4 &1080359430
 Transform:
   m_ObjectHideFlags: 0
@@ -30265,7 +30265,7 @@ PrefabInstance:
     - target: {fileID: 8589113510249810259, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35,
         type: 3}
       propertyPath: generateStateObjectDebugViews
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9115175647128222436, guid: 9b5ee7bb7cd1d104fa28daddf3eeda35,
         type: 3}
