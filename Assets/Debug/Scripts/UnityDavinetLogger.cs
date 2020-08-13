@@ -16,5 +16,11 @@
         {
             UnityEngine.Debug.LogError(message);
         }
+
+        public void Assert(bool condition, string message)
+        {
+            if (!condition)
+                UnityEngine.Debug.LogError(message);
+        }
     }
 }

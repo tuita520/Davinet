@@ -45,5 +45,11 @@ namespace Davinet
             if (logger != null && Debug.logType != LogType.None)
                 logger.LogError(message);
         }
+
+        public static void Assert(bool condition, string message)
+        {
+            if (logger != null && Debug.logType != LogType.None)
+                logger.Assert(condition, message);
+        }
     }
 }

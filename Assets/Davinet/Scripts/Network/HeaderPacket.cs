@@ -2,16 +2,20 @@
 
 namespace Davinet
 {
-    public class HeaderPacket
+    public class HeaderPacketWriter
     {
+        private readonly int headerCount;
         private readonly int offset;
         private readonly NetDataWriter writer;
 
         private int currentHeader;
         private int previousDataLength;
 
-        public HeaderPacket(int headerCount, NetDataWriter writer)
+        private const int headerValueSize = sizeof(int);
+
+        public HeaderPacketWriter(int headerCount, NetDataWriter writer)
         {
+            this.headerCount = headerCount;
             this.writer = writer;
             offset = writer.Length;
 
@@ -26,13 +30,15 @@ namespace Davinet
 
         public void WriteCurrentDataSizeToHeader()
         {
+            Debug.Assert(currentHeader < headerCount, $"Attempting to write {currentHeader + 1} headers to packet that only supports {headerCount} headers.");
+
             int length = writer.Length - previousDataLength;
 
             byte[] lengthBytes = System.BitConverter.GetBytes(length);
-            writer.Data[offset + currentHeader + 0] = lengthBytes[0];
-            writer.Data[offset + currentHeader + 1] = lengthBytes[1];
-            writer.Data[offset + currentHeader + 2] = lengthBytes[2];
-            writer.Data[offset + currentHeader + 3] = lengthBytes[3];
+            writer.Data[offset + (currentHeader * headerValueSize) + 0] = lengthBytes[0];
+            writer.Data[offset + (currentHeader * headerValueSize) + 1] = lengthBytes[1];
+            writer.Data[offset + (currentHeader * headerValueSize) + 2] = lengthBytes[2];
+            writer.Data[offset + (currentHeader * headerValueSize) + 3] = lengthBytes[3];
 
             previousDataLength = writer.Length;
             currentHeader++;

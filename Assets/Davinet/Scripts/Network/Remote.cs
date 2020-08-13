@@ -85,7 +85,7 @@ namespace Davinet
             writer.Put((byte)PacketType.State);
             writer.Put(world.Frame);
 
-            HeaderPacket headerPacket = new HeaderPacket(4, writer);
+            HeaderPacketWriter headerPacket = new HeaderPacketWriter(5, writer);
 
             WriteSpawns(writer);
             headerPacket.WriteCurrentDataSizeToHeader();
@@ -97,6 +97,9 @@ namespace Davinet
             headerPacket.WriteCurrentDataSizeToHeader();
 
             WriteFields(writer);
+            headerPacket.WriteCurrentDataSizeToHeader();
+
+            WriteEvents(writer);
             headerPacket.WriteCurrentDataSizeToHeader();
 
             writeAll = false;
@@ -180,13 +183,13 @@ namespace Davinet
             int ownershipLength = reader.GetInt();
             int statefulsLength = reader.GetInt();
             int fieldsLength = reader.GetInt();
-            //int eventsLength = reader.GetInt();
+            int eventsLength = reader.GetInt();
 
             ReadSpawns(reader, spawnsLength);
             ReadOwnership(reader, ownershipLength);
-            ReadStateful(reader, statefulsLength, frame, discardOutOfOrderPackets);
-            //ReadEvents(reader, eventsLength);
+            ReadStateful(reader, statefulsLength, frame, discardOutOfOrderPackets);            
             ReadFields(reader, fieldsLength, frame, discardOutOfOrderPackets);
+            ReadEvents(reader, eventsLength);
 
             if (!reader.EndOfData)
                 Debug.LogError($"ReadState method did not read all bytes from the NetPacketReader; it is intended to always consume all bytes, regardless of whether the data is applied to the StatefulWorld.");
