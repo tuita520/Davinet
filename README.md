@@ -1,4 +1,4 @@
-# Davinet development is currently on hold as we explore networking options.
+## Davinet development is currently on hold as we explore networking options.
 
 Davinet is a (work in progress) proof of concept for a Unity multiplayer networking framework (*it is **not** remotely production ready*). Its primary goal is to allow players to interact with physics objects with the same level of responsiveness and precision as they'd have playing offline.
 It is designed with the upcoming [asymmetrical VR vs PC game Davigo](https://www.youtube.com/watch?v=Eoxb8ALHkZA) in mind. This proof of concept is created to both survey if there is interest in a community driven networking package of this type and as a request for feedback on the general architecture.
